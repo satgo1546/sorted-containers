@@ -203,17 +203,17 @@ describe('SortedArray', () => {
 	// })
 
 	test('getitem_indexerror1', () => {
-		expect(() => slt.at(5)).toThrow()
+		expect(slt.at(5)).toBeUndefined()
 	})
 
 	test('getitem_indexerror2', () => {
 		slt = new SortedArray(range(100))
-		expect(() => slt.at(200)).toThrow()
+		expect(slt.at(200)).toBeUndefined()
 	})
 
 	test('getitem_indexerror3', () => {
 		slt = new SortedArray(range(100))
-		expect(() => slt.at(-101)).toThrow()
+		expect(slt.at(-101)).toBeUndefined()
 	})
 
 	test('delitem', () => {
@@ -403,16 +403,16 @@ describe('SortedArray', () => {
 
 	test('pop_indexerror1', () => {
 		slt = new SortedArray(range(10), { loadFactor: 4 })
-		expect(() => slt.pop(-11)).toThrow()
+		expect(slt.pop(-11)).toBeUndefined()
 	})
 
 	test('pop_indexerror2', () => {
 		slt = new SortedArray(range(10), { loadFactor: 4 })
-		expect(() => slt.pop(10)).toThrow()
+		expect(slt.pop(10)).toBeUndefined()
 	})
 
 	test('pop_indexerror3', () => {
-		expect(() => slt.pop()).toThrow()
+		expect(slt.pop()).toBeUndefined()
 	})
 
 	test('index', () => {

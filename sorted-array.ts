@@ -130,7 +130,7 @@ export class SortedArray<T> {
 	 * sl.add(2);
 	 * sl // SortedArray [1, 2, 3]
 	 *
-   * @param value - Value to add to sorted array.
+	 * @param value - Value to add to sorted array.
 	 */
 	add(value: T): void {
 		if (this._maxes.length) {
@@ -156,7 +156,7 @@ export class SortedArray<T> {
 	/**
 	 * Split sublists with length greater than double the load-factor.
 	 *
-   * Updates the index when the sublist length is less than double the load level.
+	 * Updates the index when the sublist length is less than double the load level.
 	 * This requires incrementing the nodes in a traversal from the leaf node to the root.
 	 * For an example traversal see {@link _loc}.
 	 */
@@ -466,15 +466,17 @@ export class SortedArray<T> {
 	/**
 	 * Remove value at `index` from sorted array.
 	 *
+	 * If `index` is out of range, does nothing.
+	 *
 	 * @example
 	 * const sl = new SortedArray('abcde');
 	 * sl.deleteAt(2);
 	 * sl // SortedArray ['a', 'b', 'd', 'e']
 	 *
 	 * @param index - Integer or slice for indexing. Negative integers count back from the last item in the array.
-	 * @throws {Error} - If index out of range.
 	 */
 	deleteAt(index: number): void {
+		if (index < -this._len || index >= this._len) return
 		const [pos, idx] = this._pos(index)
 		this._delete(pos, idx)
 	}
@@ -487,9 +489,9 @@ export class SortedArray<T> {
 	 * sl.deleteSlice(0, 2);
 	 * sl // SortedArray ['c', 'd', 'e']
 	 *
-   * @param start The zero-based location in the array from which to start removing elements.
+	 * @param start The zero-based location in the array from which to start removing elements.
 	 * Negative integers count back from the last item in the array.
-   * @param end The zero-based location in the array at which to stop removing elements.
+	 * @param end The zero-based location in the array at which to stop removing elements.
 	 * Negative integers count back from the last item in the array.
 	 * Elements up to but not including `end` are removed.
 	 */
@@ -519,15 +521,15 @@ export class SortedArray<T> {
 	}
 
 	/**
-   * Returns a copy of a section of sorted array as an ordinary Array.
+	 * Returns a copy of a section of sorted array as an ordinary Array.
 	 *
-   * For both start and end, a negative index can be used to indicate an offset from the end of the array.
-   *
-   * @param start The beginning index of the specified portion of the array.
-   * If start is undefined, then the slice begins at index 0.
-   * @param end The end index of the specified portion of the array. This is exclusive of the element at the index `end`.
-   * If end is undefined, then the slice extends to the end of the array.
-   */
+	 * For both start and end, a negative index can be used to indicate an offset from the end of the array.
+	 *
+	 * @param start The beginning index of the specified portion of the array.
+	 * If start is undefined, then the slice begins at index 0.
+	 * @param end The end index of the specified portion of the array. This is exclusive of the element at the index `end`.
+	 * If end is undefined, then the slice extends to the end of the array.
+	 */
 	slice(start = 0, end = this._len): T[] {
 		if (start < 0) start += this._len
 		start = Math.min(Math.max(start, 0), this._len)
@@ -564,9 +566,10 @@ export class SortedArray<T> {
 		return parts.flat()
 	}
 
-
 	/**
 	 * Lookup value at `index` in sorted array.
+	 * 
+	 * If `index` is out of range, returns `undefined`.
 	 *
 	 * @example
 	 * const sl = new SortedList('abcde');
@@ -575,19 +578,16 @@ export class SortedArray<T> {
 	 * sl.at(7) // undefined
 	 *
 	 * @param index - The zero-based index of the desired code unit. A negative index will count back from the last item.
-	 * @returns The item located at the specified index.
-	 * @throws {Error} - If index out of range.
+	 * @returns The item located at the specified index, or `undefined` if index out of range.
 	 */
-	at(index: number): T {
-		if (this._len) {
-			if (index === 0) {
-				return this._lists[0][0]
-			} else if (index === -1) {
-				const lastList = this._lists[this._lists.length - 1]
-				return lastList[lastList.length - 1]
-			}
-		} else {
-			throw new Error('list index out of range')
+	at(index: number): T | undefined {
+		if (!this._len) return
+
+		if (index === 0) {
+			return this._lists[0][0]
+		} else if (index === -1) {
+			const lastList = this._lists[this._lists.length - 1]
+			return lastList[lastList.length - 1]
 		}
 
 		if (index >= 0 && index < this._lists[0].length) {
@@ -600,6 +600,7 @@ export class SortedArray<T> {
 			return lastList[lastLength + index]
 		}
 
+		if (index < -this._len || index >= this._len) return
 		const [pos, idx] = this._pos(index)
 		return this._lists[pos][idx]
 	}
@@ -858,7 +859,7 @@ export class SortedArray<T> {
 	/**
 	 * Remove and return value at `index` in sorted array.
 	 *
-	 * Throws error if the sorted array is empty or index is out of range.
+	 * If the sorted array is empty or index is out of range, `undefined` is returned and the sorted array is not modified.
 	 *
 	 * Negative indices count back from the last item.
 	 *
@@ -870,12 +871,9 @@ export class SortedArray<T> {
 	 *
 	 * @param index - Index of value (default -1).
 	 * @returns - Value.
-	 * @throws {Error} - If index is out of range.
 	 */
-	pop(index = -1): T {
-		if (!this._len) {
-			throw new Error('pop index out of range')
-		}
+	pop(index = -1): T | undefined {
+		if (!this._len) return
 
 		if (index === 0) {
 			const val = this._lists[0][0]
@@ -906,6 +904,8 @@ export class SortedArray<T> {
 			this._delete(pos, loc)
 			return val
 		}
+
+		if (index < -this._len || index >= this._len) return
 
 		const [pos, idx] = this._pos(index)
 		const val = this._lists[pos][idx]
