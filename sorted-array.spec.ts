@@ -71,15 +71,15 @@ describe('SortedArray', () => {
 	})
 
 	test('contains', () => {
-		expect(slt.contains(0)).toBeFalsy()
+		expect(slt.includes(0)).toBeFalsy()
 
 		slt.update(range(10000))
 
 		for (const val of range(10000)) {
-			expect(slt.contains(val)).toBe(true)
+			expect(slt.includes(val)).toBe(true)
 		}
 
-		expect(slt.contains(10000)).toBeFalsy()
+		expect(slt.includes(10000)).toBeFalsy()
 		slt._check()
 	})
 

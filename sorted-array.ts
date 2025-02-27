@@ -122,19 +122,13 @@ export class SortedArray<T> {
 		this._index = []
 	}
 
-	contains(value: T): boolean {
-		if (this._maxes.length === 0) {
-			return false
-		}
+	includes(value: T): boolean {
+		if (!this._maxes.length) return false
 
 		const pos = bisectLeft(this._maxes, value)
-
-		if (pos === this._maxes.length) {
-			return false
-		}
+		if (pos === this._maxes.length) return false
 
 		const idx = bisectLeft(this._lists[pos], value)
-
 		return this._lists[pos][idx] === value
 	}
 
