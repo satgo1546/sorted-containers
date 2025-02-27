@@ -26,7 +26,7 @@ function insort<T>(a: T[], x: T): void {
 	a.splice(bisectRight(a, x), 0, x)
 }
 
-export class SortedList<T> {
+export class SortedArray<T> {
 	static readonly DEFAULT_LOAD_FACTOR = 1000
 	private readonly _load: number
 
@@ -40,7 +40,7 @@ export class SortedList<T> {
 		loadFactor: number,
 		// compareFn: (a: T, b: T) => number,
 	}) {
-		this._load = options?.loadFactor ?? SortedList.DEFAULT_LOAD_FACTOR
+		this._load = options?.loadFactor ?? SortedArray.DEFAULT_LOAD_FACTOR
 		if (iterable) {
 			this.update(iterable)
 		}
@@ -319,12 +319,12 @@ export class SortedList<T> {
 		this._offset = size * 2 - 1
 	}
 
-	delete(index: number): void {
+	deleteAt(index: number): void {
 		const [pos, idx] = this._pos(index)
 		this._delete(pos, idx)
 	}
 
-	deleteRange(start = 0, end = this._len): void {
+	deleteSlice(start = 0, end = this._len): void {
 		if (start < 0) start += this._len
 		start = Math.min(Math.max(start, 0), this._len)
 		if (end < 0) end += this._len
@@ -400,9 +400,13 @@ export class SortedList<T> {
 			[maxPos, maxIdx] = this._pos(end)
 		}
 
+		return this._slice(minPos, minIdx, maxPos, maxIdx, reverse)
+	}
+
+	private _slice(minPos: number, minIdx: number, maxPos: number, maxIdx: number, reverse: boolean): T[] {
 		if (minPos > maxPos) return []
 
-		let ret
+		let ret: T[]
 		if (minPos === maxPos) {
 			ret = this._lists[minPos].slice(minIdx, maxIdx)
 		} else if (minPos + 1 === maxPos) {
@@ -417,45 +421,32 @@ export class SortedList<T> {
 		return ret
 	}
 
-	irange(minimum?: T, maximum?: T, inclusive: [boolean, boolean] = [true, true], reverse: boolean = false): T[] {
+	range(minimum?: T, maximum?: T, includeMinimum = true, includeMaximum = true, reverse = false): T[] {
 		if (!this._maxes.length) return []
 
-		let minPos: number
-		let minIdx: number
-
+		let minPos: number, minIdx: number
 		if (minimum === undefined) {
 			minPos = 0
 			minIdx = 0
 		} else {
-			if (inclusive[0]) {
+			if (includeMinimum) {
 				minPos = bisectLeft(this._maxes, minimum)
-
-				if (minPos === this._maxes.length) {
-					return []
-				}
-
+				if (minPos === this._maxes.length) return []
 				minIdx = bisectLeft(this._lists[minPos], minimum)
 			} else {
 				minPos = bisectRight(this._maxes, minimum)
-
-				if (minPos === this._maxes.length) {
-					return []
-				}
-
+				if (minPos === this._maxes.length) return []
 				minIdx = bisectRight(this._lists[minPos], minimum)
 			}
 		}
 
-		let maxPos: number
-		let maxIdx: number
-
+		let maxPos: number, maxIdx: number
 		if (maximum === undefined) {
 			maxPos = this._maxes.length - 1
 			maxIdx = this._lists[maxPos].length
 		} else {
-			if (inclusive[1]) {
+			if (includeMaximum) {
 				maxPos = bisectRight(this._maxes, maximum)
-
 				if (maxPos === this._maxes.length) {
 					maxPos--
 					maxIdx = this._lists[maxPos].length
@@ -464,7 +455,6 @@ export class SortedList<T> {
 				}
 			} else {
 				maxPos = bisectLeft(this._maxes, maximum)
-
 				if (maxPos === this._maxes.length) {
 					maxPos--
 					maxIdx = this._lists[maxPos].length
@@ -474,7 +464,7 @@ export class SortedList<T> {
 			}
 		}
 
-		return this.slice(this._loc(minPos, minIdx), this._loc(maxPos, maxIdx), reverse)
+		return this._slice(minPos, minIdx, maxPos, maxIdx, reverse)
 	}
 
 	get length(): number {
@@ -620,10 +610,10 @@ export class SortedList<T> {
 		throw new Error(`${value} is not in list`)
 	}
 
-	concat(other: Iterable<T>): SortedList<T> {
+	concat(other: Iterable<T>): SortedArray<T> {
 		const values = this._lists.flat()
 		values.push(...other)
-		return new SortedList(values)
+		return new SortedArray(values)
 	}
 
 	_check(): void {
