@@ -26,6 +26,52 @@ function insort<T>(a: T[], x: T): void {
 	a.splice(bisectRight(a, x), 0, x)
 }
 
+/**
+ * Sorted array is a sorted mutable collection.
+ *
+ * Sorted array values are maintained in sorted order.
+ *
+ * Sorted array values must be comparable.
+ * The total ordering of values must not change while they are stored in the sorted array.
+ * 【TODO: check compareFn】
+ *
+ * Methods for adding values:
+ *
+ * - {@link SortedArray#add}
+ * - {@link SortedArray#update}
+ *
+ * Methods for removing values:
+ *
+ * - {@link SortedArray#clear}
+ * - {@link SortedArray#delete}
+ * - {@link SortedArray#deleteAt}
+ * - {@link SortedArray#deleteSlice}
+ * - {@link SortedArray#pop}
+ *
+ * Methods for looking up values:
+ *
+ * - {@link SortedArray#at}
+ * - {@link SortedArray#bisectLeft}
+ * - {@link SortedArray#bisectRight}
+ * - {@link SortedArray#count}
+ * - {@link SortedArray#includes}
+ * - {@link SortedArray#indexOf}
+ *
+ * Methods for iterating values:
+ *
+ * - {@link SortedArray#irange}
+ * - {@link SortedArray#islice}
+ * - {@link SortedArray#slice}
+ * - {@link SortedArray#[Symbol.iterator]}
+ *
+ * Miscellaneous methods and properties:
+ *
+ * - {@link SortedArray#concat}
+ * - {@link SortedArray#length}
+ * - {@link SortedArray#toJSON}
+ * - {@link SortedArray#toString}
+ * - {@link SortedArray#_check}
+ */
 export class SortedArray<T> {
 	static readonly DEFAULT_LOAD_FACTOR = 1000
 	private readonly _load: number
@@ -36,6 +82,23 @@ export class SortedArray<T> {
 	private _index: number[] = []
 	private _offset = 0
 
+	/**
+	 * Initialize sorted array instance.
+	 *
+	 * Optional `iterable` argument provides an initial iterable of values to initialize the sorted array.
+	 *
+	 * @param iterable - Initial values (optional).
+	 * @param {object} options - An object that specifies characteristics about the sorted container.
+	 * @param options.loadFactor - Specifies the load-factor for sorted array sublists.
+	 * The default load factor of 1000 works well for lists from tens to tens-of-millions of values.
+	 * Good practice is to use a value that is the cube root of the list size.
+	 * With billions of elements, the best load factor depends on your usage.
+	 * It's best to leave the load factor at the default until you start benchmarking.
+	 * @param options.compareFn - 【TODO】
+	 *
+	 * @see https://grantjenks.com/docs/sortedcontainers/implementation.html
+	 * @see https://grantjenks.com/docs/sortedcontainers/performance-scale.html
+	 */
 	constructor(iterable?: Iterable<T>, options?: {
 		loadFactor: number,
 		// compareFn: (a: T, b: T) => number,
@@ -46,6 +109,9 @@ export class SortedArray<T> {
 		}
 	}
 
+	/**
+	 * Remove all values from sorted array.
+	 */
 	clear(): void {
 		this._len = 0
 		this._lists = []
@@ -54,6 +120,18 @@ export class SortedArray<T> {
 		this._offset = 0
 	}
 
+	/**
+	 * Add `value` to sorted array.
+	 *
+	 * @example
+	 * const sl = new SortedArray();
+	 * sl.add(3);
+	 * sl.add(1);
+	 * sl.add(2);
+	 * sl // SortedArray [1, 2, 3]
+	 *
+   * @param value - Value to add to sorted array.
+	 */
 	add(value: T): void {
 		if (this._maxes.length) {
 			let pos = bisectRight(this._maxes, value)
@@ -75,6 +153,13 @@ export class SortedArray<T> {
 		this._len++
 	}
 
+	/**
+	 * Split sublists with length greater than double the load-factor.
+	 *
+   * Updates the index when the sublist length is less than double the load level.
+	 * This requires incrementing the nodes in a traversal from the leaf node to the root.
+	 * For an example traversal see {@link _loc}.
+	 */
 	private _expand(pos: number): void {
 		if (this._lists[pos].length > (this._load << 1)) {
 			const _lists_pos = this._lists[pos]
@@ -97,6 +182,16 @@ export class SortedArray<T> {
 		}
 	}
 
+	/**
+	 * Update sorted array by adding all values from `iterable`.
+	 *
+	 * @example
+	 * const sl = new SortedArray();
+	 * sl.update([3, 1, 2]);
+	 * sl // SortedArray [1, 2, 3]
+	 *
+	 * @param iterable - Iterable of values to add.
+	 */
 	update(iterable: Iterable<T>): void {
 		let values = Array.from(iterable).sort((a, b) => a < b ? -1 : a > b ? 1 : 0)
 
@@ -122,6 +217,16 @@ export class SortedArray<T> {
 		this._index = []
 	}
 
+	/**
+	 * Return true if `value` is an element of the sorted array.
+	 *
+	 * @example
+	 * const sl = new SortedArray([1, 2, 3, 4, 5]);
+	 * sl.includes(3) // true
+	 *
+	 * @param value - Search for value in sorted array.
+	 * @returns - True if `value` in sorted array.
+	 */
 	includes(value: T): boolean {
 		if (!this._maxes.length) return false
 
@@ -134,15 +239,15 @@ export class SortedArray<T> {
 
 	/**
 	 * Remove one `value` from sorted array if it is a member.
-	 * 
+	 *
 	 * If `value` is not a member, do nothing.
 	 *
 	 * @example
-   * const sl = new SortedList([1, 2, 3, 4, 5])
-   * sl.delete(5)
-   * sl.delete(0)
-   * Array.from(sl) // [1, 2, 3, 4]
-   * @param value - value to discard from sorted list
+	 * const sl = new SortedArray([1, 2, 3, 4, 5])
+	 * sl.delete(5)
+	 * sl.delete(0)
+	 * Array.from(sl) // [1, 2, 3, 4]
+	 * @param value - Value to discard from sorted array.
 	 * @returns Returns true if an element in the sorted array existed and has been removed, or false if the element does not exist.
 	 */
 	delete(value: T): boolean {
@@ -154,10 +259,22 @@ export class SortedArray<T> {
 		const idx = bisectLeft(this._lists[pos], value)
 		if (this._lists[pos][idx] !== value) return false
 
-			this._delete(pos, idx)
+		this._delete(pos, idx)
 		return true
 	}
 
+	/**
+	 * Delete value at the given `(pos, idx)`.
+	 *
+	 * Combines lists that are less than half the load level.
+	 *
+	 * Updates the index when the sublist length is more than half the load level.
+	 * This requires decrementing the nodes in a traversal from the leaf node to the root.
+	 * For an example traversal see {@link _loc}.
+	 *
+	 * @param pos - Lists index.
+	 * @param idx - Sublist index.
+	 */
 	private _delete(pos: number, idx: number): void {
 		const _lists_pos = this._lists[pos]
 		_lists_pos.splice(idx, 1)
@@ -197,6 +314,25 @@ export class SortedArray<T> {
 		}
 	}
 
+	/**
+	 * Convert an index pair (lists index, sublist index) into a single index number that corresponds to the position of the value in the sorted array.
+	 *
+	 * Many queries require the index be built.
+	 * Details of the index are described in {@link _build_index}.
+	 *
+	 * Indexing requires traversing the tree from a leaf node to the root.
+	 * The parent of each node is easily computable at `(pos - 1) >> 1`.
+	 *
+	 * Left-child nodes are always at odd indices and right-child nodes are always at even indices.
+	 *
+	 * When traversing up from a right-child node, increment the total by the left-child node.
+	 *
+	 * The final index is the sum from traversal and the index in the sublist.
+	 *
+	 * @param pos - Lists index.
+	 * @param idx - Sublist index.
+	 * @returns - Index in sorted array.
+	 */
 	private _loc(pos: number, idx: number): number {
 		if (pos === 0) return idx
 		if (!this._index.length) this._buildIndex()
@@ -216,6 +352,24 @@ export class SortedArray<T> {
 		return total + idx
 	}
 
+	/**
+	 * Convert an index into an index pair (lists index, sublist index) that can be used to access the corresponding lists position.
+	 *
+	 * Many queries require the index be built.
+	 * Details of the index are described in {@link _build_index}.
+	 *
+	 * Indexing requires traversing the tree to a leaf node.
+	 * Each node has two children which are easily computable.
+	 * Given an index, pos, the left-child is at `pos * 2 + 1` and the right-child is at `pos * 2 + 2`.
+	 *
+	 * When the index is less than the left-child, traversal moves to the left sub-tree.
+	 * Otherwise, the index is decremented by the left-child and traversal moves to the right sub-tree.
+	 *
+	 * At a child node, the indexing pair is computed from the relative position of the child node as compared with the offset and the remaining index.
+	 *
+	 * @param idx - Index in sorted array.
+	 * @returns - (lists index, sublist index) pair.
+	 */
 	private _pos(idx: number): [number, number] {
 		if (idx < 0) {
 			const lastLength = this._lists[this._lists.length - 1].length
@@ -261,6 +415,14 @@ export class SortedArray<T> {
 		return [pos - this._offset, idx]
 	}
 
+	/**
+	 * Build a positional index for indexing the sorted array.
+	 *
+	 * Indexes are represented as binary trees in a dense array notation similar to a binary heap.
+	 *
+	 * When built, the index can be used for efficient indexing into the list.
+	 * See the comment and notes on {@link _pos} for details.
+	 */
 	private _buildIndex(): void {
 		const row0 = this._lists.map(list => list.length)
 
@@ -301,11 +463,36 @@ export class SortedArray<T> {
 		this._offset = size * 2 - 1
 	}
 
+	/**
+	 * Remove value at `index` from sorted array.
+	 *
+	 * @example
+	 * const sl = new SortedArray('abcde');
+	 * sl.deleteAt(2);
+	 * sl // SortedArray ['a', 'b', 'd', 'e']
+	 *
+	 * @param index - Integer or slice for indexing. Negative integers count back from the last item in the array.
+	 * @throws {Error} - If index out of range.
+	 */
 	deleteAt(index: number): void {
 		const [pos, idx] = this._pos(index)
 		this._delete(pos, idx)
 	}
 
+	/**
+	 * Removes elements from sorted array by index.
+	 *
+	 * @example
+	 * const sl = new SortedArray('abcde');
+	 * sl.deleteSlice(0, 2);
+	 * sl // SortedArray ['c', 'd', 'e']
+	 *
+   * @param start The zero-based location in the array from which to start removing elements.
+	 * Negative integers count back from the last item in the array.
+   * @param end The zero-based location in the array at which to stop removing elements.
+	 * Negative integers count back from the last item in the array.
+	 * Elements up to but not including `end` are removed.
+	 */
 	deleteSlice(start = 0, end = this._len): void {
 		if (start < 0) start += this._len
 		start = Math.min(Math.max(start, 0), this._len)
@@ -331,6 +518,16 @@ export class SortedArray<T> {
 		}
 	}
 
+	/**
+   * Returns a copy of a section of sorted array as an ordinary Array.
+	 *
+   * For both start and end, a negative index can be used to indicate an offset from the end of the array.
+   *
+   * @param start The beginning index of the specified portion of the array.
+   * If start is undefined, then the slice begins at index 0.
+   * @param end The end index of the specified portion of the array. This is exclusive of the element at the index `end`.
+   * If end is undefined, then the slice extends to the end of the array.
+   */
 	slice(start = 0, end = this._len): T[] {
 		if (start < 0) start += this._len
 		start = Math.min(Math.max(start, 0), this._len)
@@ -367,6 +564,20 @@ export class SortedArray<T> {
 		return parts.flat()
 	}
 
+
+	/**
+	 * Lookup value at `index` in sorted array.
+	 *
+	 * @example
+	 * const sl = new SortedList('abcde');
+	 * sl.at(1) // 'b'
+	 * sl.at(-1) // 'e'
+	 * sl.at(7) // undefined
+	 *
+	 * @param index - The zero-based index of the desired code unit. A negative index will count back from the last item.
+	 * @returns The item located at the specified index.
+	 * @throws {Error} - If index out of range.
+	 */
 	at(index: number): T {
 		if (this._len) {
 			if (index === 0) {
@@ -393,12 +604,38 @@ export class SortedArray<T> {
 		return this._lists[pos][idx]
 	}
 
+	/**
+	 * Return an iterator over the sorted array.
+	 *
+	 * Iterating the sorted array while adding or deleting values may throw an error or fail to iterate over all values.
+	 */
 	*[Symbol.iterator](): IterableIterator<T> {
 		for (const list of this._lists) {
 			yield* list
 		}
 	}
 
+	/**
+	 * Return an iterator that slices sorted array from `start` to `stop`.
+	 *
+	 * The `start` and `stop` index are treated inclusive and exclusive, respectively.
+	 *
+	 * A negative index will count back from the last item.
+	 *
+	 * Both `start` and `stop` default to `undefined` which is automatically inclusive of the beginning and end of the sorted array.
+	 *
+	 * When `reverse` is `true` the values are yielded from the iterator in reverse order; `reverse` defaults to `false`.
+	 *
+	 * @example
+	 * const sl = new SortedArray('abcdefghij');
+	 * const it = sl.islice(2, 6);
+	 * Array.from(it) // ['c', 'd', 'e', 'f']
+	 *
+	 * @param start - Start index (inclusive).
+	 * @param stop - Stop index (exclusive).
+	 * @param reverse - Yield values in reverse order.
+	 * @returns - Iterator.
+	 */
 	islice(start = 0, end = this._len, reverse = false): IterableIterator<T> {
 		if (!this._len) return [][Symbol.iterator]()
 
@@ -421,6 +658,14 @@ export class SortedArray<T> {
 		return this._islice(minPos, minIdx, maxPos, maxIdx, reverse)
 	}
 
+	/**
+	 * Return an iterator that slices sorted array using two index pairs.
+	 *
+	 * The index pairs are (min_pos, min_idx) and (max_pos, max_idx), the first inclusive and the latter exclusive.
+	 * See {@link _pos} for details on how an index is converted to an index pair.
+	 *
+	 * When `reverse` is `true`, values are yielded from the iterator in reverse order.
+	 */
 	private *_islice(minPos: number, minIdx: number, maxPos: number, maxIdx: number, reverse: boolean): IterableIterator<T> {
 		if (minPos > maxPos) return
 
@@ -462,6 +707,28 @@ export class SortedArray<T> {
 		}
 	}
 
+	/**
+	 * Create an iterator of values between `minimum` and `maximum`.
+	 *
+	 * Both `minimum` and `maximum` default to `undefined` which is automatically inclusive of the beginning and end of the sorted array.
+	 *
+	 * The argument `includeMinimum` and `includeMaximum` is a pair of booleans that indicates whether the minimum and maximum ought to be included in the range, respectively.
+	 * Both arguments default to `true` such that the range is inclusive of both minimum and maximum.
+	 *
+	 * When `reverse` is `true` the values are yielded from the iterator in reverse order; `reverse` defaults to `false`.
+	 *
+	 * @example
+	 * const sl = new SortedArray('abcdefghij');
+	 * const it = sl.irange('c', 'f');
+	 * Array.from(it) // ['c', 'd', 'e', 'f']
+	 *
+	 * @param minimum - Minimum value to start iterating.
+	 * @param maximum - Maximum value to stop iterating.
+	 * @param includeMinimum - Whether the minimum ought to be included in the range.
+	 * @param includeMaximum - Whether the maximum ought to be included in the range.
+	 * @param reverse - Yield values in reverse order.
+	 * @returns - Iterator.
+	 */
 	irange(minimum?: T, maximum?: T, includeMinimum = true, includeMaximum = true, reverse = false): IterableIterator<T> {
 		if (!this._maxes.length) return [][Symbol.iterator]()
 
@@ -508,10 +775,25 @@ export class SortedArray<T> {
 		return this._islice(minPos, minIdx, maxPos, maxIdx, reverse)
 	}
 
+	/**
+	 * The size of the sorted array.
+	 */
 	get length(): number {
 		return this._len
 	}
 
+	/**
+	 * Return an index to insert `value` in the sorted array.
+	 *
+	 * If the `value` is already present, the insertion point will be before (to the left of) any existing values.
+	 *
+	 * @example
+	 * const sl = new SortedArray([10, 11, 12, 13, 14]);
+	 * sl.bisect_left(12) // 2
+	 *
+	 * @param value - Insertion index of value in sorted array.
+	 * @returns - Index.
+	 */
 	bisectLeft(value: T): number {
 		if (!this._maxes.length) return 0
 		const pos = bisectLeft(this._maxes, value)
@@ -520,6 +802,18 @@ export class SortedArray<T> {
 		return this._loc(pos, idx)
 	}
 
+	/**
+	 * Return an index to insert `value` in the sorted array.
+	 *
+	 * Similar to {@link bisectLeft}, but if `value` is already present, the insertion point will be after (to the right of) any existing values.
+	 *
+	 * @example
+	 * const sl = new SortedArray([10, 11, 12, 13, 14]);
+	 * sl.bisect_right(12) // 3
+	 *
+	 * @param value - Insertion index of value in sorted array.
+	 * @returns - Index.
+	 */
 	bisectRight(value: T): number {
 		if (!this._maxes.length) return 0
 		const pos = bisectRight(this._maxes, value)
@@ -528,6 +822,16 @@ export class SortedArray<T> {
 		return this._loc(pos, idx)
 	}
 
+	/**
+	 * Return number of occurrences of `value` in the sorted array.
+	 *
+	 * @example
+	 * const sl = new SortedArray([1, 2, 2, 3, 3, 3, 4, 4, 4, 4]);
+	 * sl.count(3) // 3
+	 *
+	 * @param value - Value to count in sorted array.
+	 * @returns - Count.
+	 */
 	count(value: T): number {
 		if (!this._maxes.length) return 0
 
@@ -551,6 +855,23 @@ export class SortedArray<T> {
 		return right - left
 	}
 
+	/**
+	 * Remove and return value at `index` in sorted array.
+	 *
+	 * Throws error if the sorted array is empty or index is out of range.
+	 *
+	 * Negative indices count back from the last item.
+	 *
+	 * @example
+	 * const sl = new SortedArray('abcde');
+	 * sl.pop() // 'e'
+	 * sl.pop(2) // 'c'
+	 * sl // SortedArray ['a', 'b', 'd']
+	 *
+	 * @param index - Index of value (default -1).
+	 * @returns - Value.
+	 * @throws {Error} - If index is out of range.
+	 */
 	pop(index = -1): T {
 		if (!this._len) {
 			throw new Error('pop index out of range')
@@ -592,6 +913,22 @@ export class SortedArray<T> {
 		return val
 	}
 
+	/**
+	 * Return first index of `value` in sorted array, or -1 if `value` is not present.
+	 *
+	 * Index must be between `start` and `end` for the `value` to be considered present.
+	 * Negative indices count back from the last item.
+	 *
+	 * @example
+	 * const sl = new SortedArray('abcde');
+	 * sl.indexOf('d') // 3
+	 * sl.indexOf('z') // -1
+	 *
+	 * @param value - Value in sorted array.
+	 * @param start - The array index at which to start the search. If omitted, defaults to 0.
+	 * @param end - The array index at which to end the search. If omitted, defaults to the end of the sorted array.
+	 * @returns - The index of the first occurrence of `value` in the sorted array, or -1 if it is not present.
+	 */
 	indexOf(value: T, start = 0, end = this._len): number {
 		if (!this._len) return -1
 
@@ -625,12 +962,40 @@ export class SortedArray<T> {
 		return -1
 	}
 
+	/**
+	 * Return new sorted array containing all values in both sequences.
+	 *
+	 * Values in `other` do not need to be in sorted order.
+	 *
+	 * @example
+	 * const sl1 = new SortedArray('bat');
+	 * const sl2 = new SortedArray('cat');
+	 * sl1.concat(sl2) // SortedArray ['a', 'a', 'b', 'c', 't', 't']
+	 *
+	 * @param other - Other iterable.
+	 * @returns - New sorted array.
+	 */
 	concat(other: Iterable<T>): SortedArray<T> {
-		const values = this._lists.flat()
-		values.push(...other)
-		return new SortedArray(values)
+		return new SortedArray([...this._lists.flat(), ...other])
 	}
 
+	/**
+	 * Return sorted array as an ordinary Array.
+	 */
+	toJSON(): T[] {
+		return this._lists.flat()
+	}
+
+	/**
+	 * Return a string representation of sorted array.
+	 */
+	toString(): string {
+		return this._lists.toString()
+	}
+
+	/**
+	 * Check invariants of sorted array.
+	 */
 	_check(): void {
 		try {
 			assert(this._load >= 4)
@@ -699,6 +1064,6 @@ export class SortedArray<T> {
 	}
 }
 
-function assert(predicate: unknown) {
+function assert(predicate: unknown): void {
 	if (!predicate) throw new Error('assertion failed')
 }
