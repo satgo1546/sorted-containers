@@ -610,63 +610,37 @@ export class SortedArray<T> {
 		return val
 	}
 
-	index(value: T, start?: number, stop?: number): number {
-		if (!this._len) {
-			throw new Error(`${value} is not in list`)
-		}
+	indexOf(value: T, start = 0, end = this._len): number {
+		if (!this._len) return -1
 
-		if (start === undefined) {
-			start = 0
-		}
-		if (start < 0) {
-			start += this._len
-		}
-		if (start < 0) {
-			start = 0
-		}
+		if (start < 0) start += this._len
+		if (start < 0) start = 0
 
-		if (stop === undefined) {
-			stop = this._len
-		}
-		if (stop < 0) {
-			stop += this._len
-		}
-		if (stop > this._len) {
-			stop = this._len
-		}
+		if (end < 0) end += this._len
+		if (end > this._len) end = this._len
 
-		if (stop <= start) {
-			throw new Error(`${value} is not in list`)
-		}
+		if (end <= start) return -1
 
 		const posLeft = bisectLeft(this._maxes, value)
-
-		if (posLeft === this._maxes.length) {
-			throw new Error(`${value} is not in list`)
-		}
+		if (posLeft === this._maxes.length) return -1
 
 		const idxLeft = bisectLeft(this._lists[posLeft], value)
+		if (this._lists[posLeft][idxLeft] !== value) return -1
 
-		if (this._lists[posLeft][idxLeft] !== value) {
-			throw new Error(`${value} is not in list`)
-		}
-
-		stop--
+		end--
 		const left = this._loc(posLeft, idxLeft)
-
 		if (start <= left) {
-			if (left <= stop) {
+			if (left <= end) {
 				return left
 			}
 		} else {
 			const right = this.bisectRight(value) - 1
-
 			if (start <= right) {
 				return start
 			}
 		}
 
-		throw new Error(`${value} is not in list`)
+		return -1
 	}
 
 	concat(other: Iterable<T>): SortedArray<T> {

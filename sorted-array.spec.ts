@@ -114,17 +114,17 @@ describe('SortedArray', () => {
 	})
 
 	test('remove_valueerror1', () => {
-		expect(() => slt.remove(0)).toThrow(Error)
+		expect(() => slt.remove(0)).toThrow()
 	})
 
 	test('remove_valueerror2', () => {
 		slt = new SortedArray(range(100), { loadFactor: 10 })
-		expect(() => slt.remove(100)).toThrow(Error)
+		expect(() => slt.remove(100)).toThrow()
 	})
 
 	test('remove_valueerror3', () => {
 		slt = new SortedArray([1, 2, 2, 2, 3, 3, 5])
-		expect(() => slt.remove(4)).toThrow(Error)
+		expect(() => slt.remove(4)).toThrow()
 	})
 
 	test('delete', () => {
@@ -212,21 +212,21 @@ describe('SortedArray', () => {
 
 	// test('getitem_slicezero', () => {
 	// 	slt = new SortedList(range(100), { loadFactor: 17 })
-	// 	expect(() => slt.slice(0, undefined, 0)).toThrow(Error)
+	// 	expect(() => slt.slice(0, undefined, 0)).toThrow()
 	// })
 
 	test('getitem_indexerror1', () => {
-		expect(() => slt.at(5)).toThrow(Error)
+		expect(() => slt.at(5)).toThrow()
 	})
 
 	test('getitem_indexerror2', () => {
 		slt = new SortedArray(range(100))
-		expect(() => slt.at(200)).toThrow(Error)
+		expect(() => slt.at(200)).toThrow()
 	})
 
 	test('getitem_indexerror3', () => {
 		slt = new SortedArray(range(100))
-		expect(() => slt.at(-101)).toThrow(Error)
+		expect(() => slt.at(-101)).toThrow()
 	})
 
 	test('delitem', () => {
@@ -265,7 +265,7 @@ describe('SortedArray', () => {
 
 	// test('reverse', () => {
 	// 	slt = new SortedList(range(10000))
-	// 	expect(() => slt.reverse()).toThrow(Error)
+	// 	expect(() => slt.reverse()).toThrow()
 	// })
 
 	test('islice', () => {
@@ -416,16 +416,16 @@ describe('SortedArray', () => {
 
 	test('pop_indexerror1', () => {
 		slt = new SortedArray(range(10), { loadFactor: 4 })
-		expect(() => slt.pop(-11)).toThrow(Error)
+		expect(() => slt.pop(-11)).toThrow()
 	})
 
 	test('pop_indexerror2', () => {
 		slt = new SortedArray(range(10), { loadFactor: 4 })
-		expect(() => slt.pop(10)).toThrow(Error)
+		expect(() => slt.pop(10)).toThrow()
 	})
 
 	test('pop_indexerror3', () => {
-		expect(() => slt.pop()).toThrow(Error)
+		expect(() => slt.pop()).toThrow()
 	})
 
 	test('index', () => {
@@ -433,58 +433,58 @@ describe('SortedArray', () => {
 		slt._check()
 
 		for (const val of range(100)) {
-			expect(slt.index(val)).toBe(val)
+			expect(slt.indexOf(val)).toBe(val)
 		}
 
-		expect(slt.index(99, 0, 1000)).toBe(99)
+		expect(slt.indexOf(99, 0, 1000)).toBe(99)
 
 		slt = new SortedArray(Array(100).fill(0), { loadFactor: 17 })
 
 		for (const start of range(100)) {
 			for (const stop of range(start, 100)) {
-				expect(slt.index(0, start, stop + 1)).toBe(start)
+				expect(slt.indexOf(0, start, stop + 1)).toBe(start)
 			}
 		}
 
 		for (const start of range(100)) {
-			expect(slt.index(0, -(100 - start))).toBe(start)
+			expect(slt.indexOf(0, -(100 - start))).toBe(start)
 		}
 
-		expect(slt.index(0, -1000)).toBe(0)
+		expect(slt.indexOf(0, -1000)).toBe(0)
 	})
 
 	test('index_valueerror1', () => {
 		slt = new SortedArray(Array(10).fill(0), { loadFactor: 4 })
-		expect(() => slt.index(0, 10)).toThrow(Error)
+		expect(slt.indexOf(0, 10)).toBe(-1)
 	})
 
 	test('index_valueerror2', () => {
 		slt = new SortedArray(Array(10).fill(0), { loadFactor: 4 })
-		expect(() => slt.index(0, 0, -10)).toThrow(Error)
+		expect(slt.indexOf(0, 0, -10)).toBe(-1)
 	})
 
 	test('index_valueerror3', () => {
 		slt = new SortedArray(Array(10).fill(0), { loadFactor: 4 })
-		expect(() => slt.index(0, 7, 3)).toThrow(Error)
+		expect(slt.indexOf(0, 7, 3)).toBe(-1)
 	})
 
 	test('index_valueerror4', () => {
 		slt = new SortedArray(Array(10).fill(0), { loadFactor: 4 })
-		expect(() => slt.index(1)).toThrow(Error)
+		expect(slt.indexOf(1)).toBe(-1)
 	})
 
 	test('index_valueerror5', () => {
-		expect(() => slt.index(1)).toThrow(Error)
+		expect(slt.indexOf(1)).toBe(-1)
 	})
 
 	test('index_valueerror6', () => {
 		slt = new SortedArray(range(10), { loadFactor: 4 })
-		expect(() => slt.index(3, 5)).toThrow(Error)
+		expect(slt.indexOf(3, 5)).toBe(-1)
 	})
 
 	test('index_valueerror7', () => {
 		slt = new SortedArray([...Array(10).fill(0), ...Array(10).fill(2)], { loadFactor: 4 })
-		expect(() => slt.index(1, 0, 10)).toThrow(Error)
+		expect(slt.indexOf(1, 0, 10)).toBe(-1)
 	})
 
 	// test('mul', () => {
