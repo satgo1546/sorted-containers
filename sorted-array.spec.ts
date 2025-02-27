@@ -278,66 +278,66 @@ describe('SortedArray', () => {
 
 		for (const start of range(53)) {
 			for (const stop of range(53)) {
-				expect(slt.slice(start, stop)).toStrictEqual(values.slice(start, stop))
-				expect(slt.slice(start, stop, true)).toStrictEqual(values.slice(start, stop).reverse())
+				expect(Array.from(slt.islice(start, stop))).toStrictEqual(values.slice(start, stop))
+				expect(Array.from(slt.islice(start, stop, true))).toStrictEqual(values.slice(start, stop).reverse())
 			}
 		}
 
 		for (const start of range(53)) {
-			expect(slt.slice(start)).toStrictEqual(values.slice(start))
-			expect(slt.slice(start, undefined, true)).toStrictEqual(values.slice(start).reverse())
+			expect(Array.from(slt.islice(start))).toStrictEqual(values.slice(start))
+			expect(Array.from(slt.islice(start, undefined, true))).toStrictEqual(values.slice(start).reverse())
 		}
 
 		for (const stop of range(53)) {
-			expect(slt.slice(0, stop)).toStrictEqual(values.slice(0, stop))
-			expect(slt.slice(0, stop, true)).toStrictEqual(values.slice(0, stop).reverse())
+			expect(Array.from(slt.islice(0, stop))).toStrictEqual(values.slice(0, stop))
+			expect(Array.from(slt.islice(0, stop, true))).toStrictEqual(values.slice(0, stop).reverse())
 		}
 	})
 
 	test('irange', () => {
 		slt = new SortedArray(undefined, { loadFactor: 7 })
 
-		expect(slt.range()).toStrictEqual([])
+		expect(Array.from(slt.irange())).toStrictEqual([])
 
 		const values = Array.from(range(53))
 		slt.update(values)
 
 		for (const start of range(53)) {
 			for (const end of range(start, 53)) {
-				expect(slt.range(start, end)).toStrictEqual(values.slice(start, end + 1))
-				expect(slt.range(start, end, undefined, undefined, true)).toStrictEqual(values.slice(start, end + 1).reverse())
+				expect(Array.from(slt.irange(start, end))).toStrictEqual(values.slice(start, end + 1))
+				expect(Array.from(slt.irange(start, end, undefined, undefined, true))).toStrictEqual(values.slice(start, end + 1).reverse())
 			}
 		}
 
 		for (const start of range(53)) {
 			for (const end of range(start, 53)) {
-				expect(slt.range(start, end, true, false)).toStrictEqual(Array.from(range(start, end)))
+				expect(Array.from(slt.irange(start, end, true, false))).toStrictEqual(Array.from(range(start, end)))
 			}
 		}
 
 		for (const start of range(53)) {
 			for (const end of range(start, 53)) {
-				expect(slt.range(start, end, false, true)).toStrictEqual(Array.from(range(start + 1, end + 1)))
+				expect(Array.from(slt.irange(start, end, false, true))).toStrictEqual(Array.from(range(start + 1, end + 1)))
 			}
 		}
 
 		for (const start of range(53)) {
 			for (const end of range(start, 53)) {
-				expect(slt.range(start, end, false, false)).toStrictEqual(Array.from(range(start + 1, end)))
+				expect(Array.from(slt.irange(start, end, false, false))).toStrictEqual(Array.from(range(start + 1, end)))
 			}
 		}
 
 		for (const start of range(53)) {
-			expect(slt.range(start)).toStrictEqual(Array.from(range(start, 53)))
+			expect(Array.from(slt.irange(start))).toStrictEqual(Array.from(range(start, 53)))
 		}
 
 		for (const end of range(53)) {
-			expect(slt.range(undefined, end, true, false)).toStrictEqual(Array.from(range(0, end)))
+			expect(Array.from(slt.irange(undefined, end, true, false))).toStrictEqual(Array.from(range(0, end)))
 		}
 
-		expect(slt.range(undefined, undefined, false, false)).toStrictEqual(values)
-		expect(slt.range(53)).toStrictEqual([])
-		expect(slt.range(undefined, 53, true, false)).toStrictEqual(values)
+		expect(Array.from(slt.irange(undefined, undefined, false, false))).toStrictEqual(values)
+		expect(Array.from(slt.irange(53))).toStrictEqual([])
+		expect(Array.from(slt.irange(undefined, 53, true, false))).toStrictEqual(values)
 	})
 
 	test('len', () => {

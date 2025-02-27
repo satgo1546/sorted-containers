@@ -349,6 +349,42 @@ export class SortedArray<T> {
 		}
 	}
 
+	slice(start = 0, end = this._len): T[] {
+		if (start < 0) start += this._len
+		start = Math.min(Math.max(start, 0), this._len)
+		if (end < 0) end += this._len
+		end = Math.min(Math.max(end, 0), this._len)
+
+		if (start >= end) return []
+
+		// Whole slice optimization: start to stop slices the whole sorted list.
+		if (start === 0 && end === this._len) {
+			return this._lists.flat()
+		}
+
+		const [startPos, startIdx] = this._pos(start)
+		const startList = this._lists[startPos]
+		let endIdx = startIdx + end - start
+
+		// Small slice optimization: start index and stop index are within the start list.
+		if (startList.length >= endIdx) {
+			return startList.slice(startIdx, endIdx)
+		}
+
+		let endPos: number
+		if (end === this._len) {
+			endPos = this._lists.length - 1
+			endIdx = this._lists[endPos].length
+		} else {
+			[endPos, endIdx] = this._pos(end)
+		}
+
+		const parts = this._lists.slice(startPos, endPos)
+		parts[0] = parts[0].slice(startIdx)
+		parts.push(this._lists[endPos].slice(0, endIdx))
+		return parts.flat()
+	}
+
 	at(index: number): T {
 		if (this._len) {
 			if (index === 0) {
@@ -381,14 +417,14 @@ export class SortedArray<T> {
 		}
 	}
 
-	slice(start = 0, end = this._len, reverse = false): T[] {
-		if (!this._len) return []
+	islice(start = 0, end = this._len, reverse = false): IterableIterator<T> {
+		if (!this._len) return [][Symbol.iterator]()
 
 		if (start < 0) start += this._len
 		start = Math.min(Math.max(start, 0), this._len)
 		if (end < 0) end += this._len
 		end = Math.min(Math.max(end, 0), this._len)
-		if (start >= end) return []
+		if (start >= end) return [][Symbol.iterator]()
 
 		const [minPos, minIdx] = this._pos(start)
 
@@ -400,29 +436,52 @@ export class SortedArray<T> {
 			[maxPos, maxIdx] = this._pos(end)
 		}
 
-		return this._slice(minPos, minIdx, maxPos, maxIdx, reverse)
+		return this._islice(minPos, minIdx, maxPos, maxIdx, reverse)
 	}
 
-	private _slice(minPos: number, minIdx: number, maxPos: number, maxIdx: number, reverse: boolean): T[] {
-		if (minPos > maxPos) return []
+	private *_islice(minPos: number, minIdx: number, maxPos: number, maxIdx: number, reverse: boolean): IterableIterator<T> {
+		if (minPos > maxPos) return
 
-		let ret: T[]
 		if (minPos === maxPos) {
-			ret = this._lists[minPos].slice(minIdx, maxIdx)
-		} else if (minPos + 1 === maxPos) {
-			ret = this._lists[minPos].slice(minIdx).concat(this._lists[maxPos].slice(0, maxIdx))
-		} else {
-			ret = this._lists[minPos].slice(minIdx).concat(
-				...this._lists.slice(minPos + 1, maxPos),
-				this._lists[maxPos].slice(0, maxIdx),
-			)
+			if (reverse) {
+				for (let idx = maxIdx - 1; idx >= minIdx; idx--) {
+					yield this._lists[minPos][idx]
+				}
+			} else {
+				for (let idx = minIdx; idx < maxIdx; idx++) {
+					yield this._lists[minPos][idx]
+				}
+			}
+			return
 		}
-		if (reverse) ret.reverse()
-		return ret
+
+		if (reverse) {
+			for (let idx = maxIdx - 1; idx >= 0; idx--) {
+				yield this._lists[maxPos][idx]
+			}
+			for (let pos = maxPos - 1; pos > minPos; pos--) {
+				for (let idx = this._lists[pos].length - 1; idx >= 0; idx--) {
+					yield this._lists[pos][idx]
+				}
+			}
+			for (let idx = this._lists[minPos].length - 1; idx >= minIdx; idx--) {
+				yield this._lists[minPos][idx]
+			}
+		} else {
+			for (let idx = minIdx; idx < this._lists[minPos].length; idx++) {
+				yield this._lists[minPos][idx]
+			}
+			for (let pos = minPos + 1; pos < maxPos; pos++) {
+				yield* this._lists[pos]
+			}
+			for (let idx = 0; idx < maxIdx; idx++) {
+				yield this._lists[maxPos][idx]
+			}
+		}
 	}
 
-	range(minimum?: T, maximum?: T, includeMinimum = true, includeMaximum = true, reverse = false): T[] {
-		if (!this._maxes.length) return []
+	irange(minimum?: T, maximum?: T, includeMinimum = true, includeMaximum = true, reverse = false): IterableIterator<T> {
+		if (!this._maxes.length) return [][Symbol.iterator]()
 
 		let minPos: number, minIdx: number
 		if (minimum === undefined) {
@@ -431,11 +490,11 @@ export class SortedArray<T> {
 		} else {
 			if (includeMinimum) {
 				minPos = bisectLeft(this._maxes, minimum)
-				if (minPos === this._maxes.length) return []
+				if (minPos === this._maxes.length) return [][Symbol.iterator]()
 				minIdx = bisectLeft(this._lists[minPos], minimum)
 			} else {
 				minPos = bisectRight(this._maxes, minimum)
-				if (minPos === this._maxes.length) return []
+				if (minPos === this._maxes.length) return [][Symbol.iterator]()
 				minIdx = bisectRight(this._lists[minPos], minimum)
 			}
 		}
@@ -464,7 +523,7 @@ export class SortedArray<T> {
 			}
 		}
 
-		return this._slice(minPos, minIdx, maxPos, maxIdx, reverse)
+		return this._islice(minPos, minIdx, maxPos, maxIdx, reverse)
 	}
 
 	get length(): number {
