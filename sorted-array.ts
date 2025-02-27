@@ -308,7 +308,7 @@ export class SortedList<T> {
 
 		while (tree[tree.length - 1].length > 1) {
 			const lastLayer = tree[tree.length - 1]
-			const row = []
+			const row: number[] = []
 			for (let i = 1; i < lastLayer.length; i += 2) {
 				row.push(lastLayer[i - 1] + lastLayer[i])
 			}
@@ -325,8 +325,10 @@ export class SortedList<T> {
 	}
 
 	deleteRange(start = 0, end = this._len): void {
-		start = Math.max(0, start)
-		end = Math.min(this._len, end)
+		if (start < 0) start += this._len
+		start = Math.min(Math.max(start, 0), this._len)
+		if (end < 0) end += this._len
+		end = Math.min(Math.max(end, 0), this._len)
 
 		if (start < end) {
 			if (start === 0 && end === this._len) {
@@ -382,13 +384,15 @@ export class SortedList<T> {
 	slice(start = 0, end = this._len, reverse = false): T[] {
 		if (!this._len) return []
 
-		start = Math.max(0, start)
-		end = Math.min(this._len, end)
+		if (start < 0) start += this._len
+		start = Math.min(Math.max(start, 0), this._len)
+		if (end < 0) end += this._len
+		end = Math.min(Math.max(end, 0), this._len)
 		if (start >= end) return []
 
 		const [minPos, minIdx] = this._pos(start)
 
-		let maxPos, maxIdx
+		let maxPos: number, maxIdx: number
 		if (end === this._len) {
 			maxPos = this._lists.length - 1
 			maxIdx = this._lists[maxPos].length
