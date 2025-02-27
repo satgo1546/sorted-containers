@@ -84,54 +84,41 @@ describe('SortedArray', () => {
 	})
 
 	test('discard', () => {
-		expect(slt.discard(0)).toBeUndefined()
+		expect(slt.delete(0)).toBe(false)
 		expect(slt.length).toBe(0)
 		slt._check()
 
 		slt = new SortedArray([1, 2, 2, 2, 3, 3, 5], { loadFactor: 4 })
 
-		slt.discard(6)
+		expect(slt.delete(6)).toBe(false)
 		slt._check()
-		slt.discard(4)
+		expect(slt.delete(4)).toBe(false)
 		slt._check()
-		slt.discard(2)
-		slt._check()
-
-		expect(Array.from(slt)).toStrictEqual([1, 2, 2, 3, 3, 5])
-	})
-
-	test('remove', () => {
-		expect(slt.discard(0)).toBeUndefined()
-		expect(slt.length).toBe(0)
-		slt._check()
-
-		slt = new SortedArray([1, 2, 2, 2, 3, 3, 5], { loadFactor: 4 })
-
-		slt.remove(2)
+		expect(slt.delete(2)).toBe(true)
 		slt._check()
 
 		expect(Array.from(slt)).toStrictEqual([1, 2, 2, 3, 3, 5])
 	})
 
 	test('remove_valueerror1', () => {
-		expect(() => slt.remove(0)).toThrow()
+		expect(slt.delete(0)).toBe(false)
 	})
 
 	test('remove_valueerror2', () => {
 		slt = new SortedArray(range(100), { loadFactor: 10 })
-		expect(() => slt.remove(100)).toThrow()
+		expect(slt.delete(100)).toBe(false)
 	})
 
 	test('remove_valueerror3', () => {
 		slt = new SortedArray([1, 2, 2, 2, 3, 3, 5])
-		expect(() => slt.remove(4)).toThrow()
+		expect(slt.delete(4)).toBe(false)
 	})
 
 	test('delete', () => {
 		slt = new SortedArray(range(20), { loadFactor: 4 })
 		slt._check()
 		for (const val of range(20)) {
-			slt.remove(val)
+			slt.delete(val)
 			slt._check()
 		}
 		expect(slt.length).toBe(0)

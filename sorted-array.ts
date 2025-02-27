@@ -132,42 +132,30 @@ export class SortedArray<T> {
 		return this._lists[pos][idx] === value
 	}
 
-	discard(value: T): void {
-		if (this._maxes.length === 0) {
-			return
-		}
+	/**
+	 * Remove one `value` from sorted array if it is a member.
+	 * 
+	 * If `value` is not a member, do nothing.
+	 *
+	 * @example
+   * const sl = new SortedList([1, 2, 3, 4, 5])
+   * sl.delete(5)
+   * sl.delete(0)
+   * Array.from(sl) // [1, 2, 3, 4]
+   * @param value - value to discard from sorted list
+	 * @returns Returns true if an element in the sorted array existed and has been removed, or false if the element does not exist.
+	 */
+	delete(value: T): boolean {
+		if (!this._maxes.length) return false
 
 		const pos = bisectLeft(this._maxes, value)
-
-		if (pos === this._maxes.length) {
-			return
-		}
+		if (pos === this._maxes.length) return false
 
 		const idx = bisectLeft(this._lists[pos], value)
+		if (this._lists[pos][idx] !== value) return false
 
-		if (this._lists[pos][idx] === value) {
 			this._delete(pos, idx)
-		}
-	}
-
-	remove(value: T): void {
-		if (!this._maxes.length) {
-			throw new Error(`${value} not in list`)
-		}
-
-		const pos = bisectLeft(this._maxes, value)
-
-		if (pos === this._maxes.length) {
-			throw new Error(`${value} not in list`)
-		}
-
-		const idx = bisectLeft(this._lists[pos], value)
-
-		if (this._lists[pos][idx] === value) {
-			this._delete(pos, idx)
-		} else {
-			throw new Error(`${value} not in list`)
-		}
+		return true
 	}
 
 	private _delete(pos: number, idx: number): void {
@@ -563,7 +551,7 @@ export class SortedArray<T> {
 		return right - left
 	}
 
-	pop(index: number = -1): T {
+	pop(index = -1): T {
 		if (!this._len) {
 			throw new Error('pop index out of range')
 		}
@@ -582,7 +570,7 @@ export class SortedArray<T> {
 			return val
 		}
 
-		if (0 <= index && index < this._lists[0].length) {
+		if (index >= 0 && index < this._lists[0].length) {
 			const val = this._lists[0][index]
 			this._delete(0, index)
 			return val
