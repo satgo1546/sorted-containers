@@ -1,4 +1,18 @@
 {
+	"name": "sorted-containers",
+	"version": "0.1.0",
+	"description": "Sorted Containers — Sorted Array, Sorted Map, Sorted Set",
+	"main": "index.ts",
+	"type": "module",
+	"scripts": {
+		"test": "vitest"
+	},
+	"keywords": ["sorted"],
+	"author": {
+		"name": "Frog Chen",
+		"url": "https://satgo1546.github.io/"
+	},
+	"homepage": "https://satgo1546.github.io/sorted-containers/",
 	"devDependencies": {
 		"@types/seedrandom": "^3.0.8",
 		"@vitest/coverage-v8": "3.0.7",
