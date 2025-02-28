@@ -1,5 +1,6 @@
 import { describe, test, expect } from 'vitest'
 import { SortedArray } from './sorted-array'
+import seedrandom from 'seedrandom'
 
 function* range(start: number, end?: number, step: number = 1): Generator<number> {
 	if (end === undefined) {
@@ -26,6 +27,7 @@ describe('SortedArray', () => {
 
 	test('add', () => {
 		let slt = new SortedArray<number>
+		const random = seedrandom('')
 		for (const val of range(1000)) {
 			slt.add(val)
 			slt._check()
@@ -39,7 +41,7 @@ describe('SortedArray', () => {
 
 		slt = new SortedArray()
 		for (const val of range(1000)) {
-			slt.add(Math.random())
+			slt.add(random())
 			slt._check()
 		}
 	})
@@ -121,11 +123,12 @@ describe('SortedArray', () => {
 
 	test('getitem', () => {
 		let slt = new SortedArray(undefined, { loadFactor: 17 })
+		const random = seedrandom('')
 
 		const lst: number[] = []
 
 		for (const rpt of range(100)) {
-			const val = Math.random()
+			const val = random()
 			slt.add(val)
 			lst.push(val)
 		}
@@ -140,11 +143,12 @@ describe('SortedArray', () => {
 
 	test('getitem_slice', () => {
 		let slt = new SortedArray(undefined, { loadFactor: 17 })
+		const random = seedrandom('')
 
 		const lst: number[] = []
 
 		for (const rpt of range(100)) {
-			const val = Math.random()
+			const val = random()
 			slt.add(val)
 			lst.push(val)
 		}
@@ -207,8 +211,9 @@ describe('SortedArray', () => {
 
 	test('delitem', () => {
 		let slt = new SortedArray(range(100), { loadFactor: 17 })
+		const random = seedrandom('')
 		while (slt.length > 0) {
-			const pos = Math.floor(Math.random() * slt.length)
+			const pos = Math.floor(random() * slt.length)
 			slt.deleteAt(pos)
 			slt._check()
 		}
