@@ -1,6 +1,6 @@
 function bisectLeft<T>(a: T[], x: T, lo = 0, hi = a.length): number {
 	while (lo < hi) {
-		const mid = lo + hi >> 1
+		const mid = lo + (hi - lo >>> 1)
 		if (a[mid] < x) {
 			lo = mid + 1
 		} else {
@@ -12,7 +12,7 @@ function bisectLeft<T>(a: T[], x: T, lo = 0, hi = a.length): number {
 
 function bisectRight<T>(a: T[], x: T, lo = 0, hi = a.length): number {
 	while (lo < hi) {
-		const mid = lo + hi >> 1
+		const mid = lo + (hi - lo >>> 1)
 		if (x < a[mid]) {
 			hi = mid
 		} else {
@@ -175,7 +175,7 @@ export class SortedArray<T> {
 				let child = this._offset + pos
 				while (child > 0) {
 					this._index[child]++
-					child = (child - 1) >> 1
+					child = (child - 1) >>> 1
 				}
 				this._index[0]++
 			}
@@ -282,14 +282,14 @@ export class SortedArray<T> {
 
 		const len_lists_pos = _lists_pos.length
 
-		if (len_lists_pos > (this._load >> 1)) {
+		if (len_lists_pos > (this._load >>> 1)) {
 			this._maxes[pos] = _lists_pos[_lists_pos.length - 1]
 
 			if (this._index.length) {
 				let child = this._offset + pos
 				while (child > 0) {
 					this._index[child]--
-					child = (child - 1) >> 1
+					child = (child - 1) >>> 1
 				}
 				this._index[0]--
 			}
@@ -321,7 +321,7 @@ export class SortedArray<T> {
 	 * Details of the index are described in {@link _build_index}.
 	 *
 	 * Indexing requires traversing the tree from a leaf node to the root.
-	 * The parent of each node is easily computable at `(pos - 1) >> 1`.
+	 * The parent of each node is easily computable at `(pos - 1) >>> 1`.
 	 *
 	 * Left-child nodes are always at odd indices and right-child nodes are always at even indices.
 	 *
@@ -341,12 +341,13 @@ export class SortedArray<T> {
 		// Increment pos to point in the index to len(self._lists[pos]).
 		pos += this._offset
 		// Iterate until reaching the root of the index tree at pos = 0.
-		while (pos > 0) {
+		while (pos) {
 			// Right-child nodes are at odd indices. At such indices account the total below the left child node.
 			if (!(pos & 1)) {
 				total += this._index[pos - 1]
 			}
-			pos = (pos - 1) >> 1
+			// Advance pos to the parent node.
+			pos = (pos - 1) >>> 1
 		}
 
 		return total + idx
@@ -446,7 +447,7 @@ export class SortedArray<T> {
 			return
 		}
 
-		const size = 1 << (Math.log2(row1.length - 1) | 0) + 1
+		const size = 1 << 32 - Math.clz32(row1.length - 1)
 		row1.push(...Array(size - row1.length).fill(0))
 		const tree = [row0, row1]
 
@@ -1024,7 +1025,7 @@ export class SortedArray<T> {
 			assert(this._lists.every(list => list.length <= double))
 
 			// Check sublist lengths are greater than half load-factor for all but the last sublist.
-			const half = this._load >> 1
+			const half = this._load >>> 1
 			for (let pos = 0; pos < this._lists.length - 1; pos++) {
 				assert(this._lists[pos].length >= half)
 			}
