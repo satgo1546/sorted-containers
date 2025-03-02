@@ -12,6 +12,7 @@
 		"name": "Frog Chen",
 		"url": "https://satgo1546.github.io/"
 	},
+	"license": "MIT",
 	"homepage": "https://satgo1546.github.io/sorted-containers/",
 	"devDependencies": {
 		"@types/seedrandom": "^3.0.8",

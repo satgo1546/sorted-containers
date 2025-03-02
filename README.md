@@ -1,1 +1,5 @@
-# sorted-containers-js
+# Sorted Containers for JavaScript
+
+## License
+
+MIT
