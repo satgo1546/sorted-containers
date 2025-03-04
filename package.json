@@ -7,7 +7,23 @@
 	"scripts": {
 		"test": "vitest"
 	},
-	"keywords": ["sorted"],
+	"keywords": [
+		"sorted",
+		"collection",
+		"ordered",
+		"datastructure",
+		"data-structure",
+		"data structure",
+		"array",
+		"map",
+		"set",
+		"sorted array",
+		"sorted map",
+		"sorted set",
+		"ordered array",
+		"ordered map",
+		"ordered set"
+	],
 	"author": {
 		"name": "Frog Chen",
 		"url": "https://satgo1546.github.io/"
@@ -15,9 +31,22 @@
 	"license": "MIT",
 	"homepage": "https://satgo1546.github.io/sorted-containers/",
 	"devDependencies": {
+		"@types/bintrees": "^1.0.6",
+		"@types/collections": "^5.1.5",
+		"@types/functional-red-black-tree": "^1.0.6",
 		"@types/seedrandom": "^3.0.8",
 		"@vitest/coverage-v8": "3.0.7",
+		"avl": "^1.6.0",
+		"bintrees": "^1.0.2",
+		"collections": "^5.1.13",
+		"functional-red-black-tree": "^1.0.1",
+		"js-sdsl": "^4.4.2",
+		"jstreemap": "^1.28.2",
 		"seedrandom": "^3.0.5",
+		"sorted-btree": "^1.8.1",
+		"splaytree": "^3.1.2",
+		"tinybench": "^3.1.1",
+		"vite": "^6.2.0",
 		"vitest": "^3.0.7"
 	},
 	"packageManager": "pnpm@10.5.2+sha512.da9dc28cd3ff40d0592188235ab25d3202add8a207afbedc682220e4a0029ffbff4562102b9e6e46b4e3f9e8bd53e6d05de48544b0c57d4b0179e22c76d1199b",
