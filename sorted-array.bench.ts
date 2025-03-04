@@ -8,7 +8,7 @@ import { bisectLeft, bisectRight, insort } from './bisect.ts'
 
 let bench: Bench
 function describe(name: string, fn: () => void) {
-	console.error(name)
+	console.log(name)
 	bench = new Bench({
 		name,
 		iterations: 10,
@@ -35,6 +35,7 @@ function makeStockAndBench<T>(name: string, factory: () => T): [T, (fn: (x: T) =
 	const stock = factory()
 	return [stock, fn => {
 		bench.add(name, () => fn(stock))
+		console.log(fn(stock), name)
 	}, fn => {
 		let x: T
 		bench.add(name, () => fn(x), {
@@ -42,6 +43,7 @@ function makeStockAndBench<T>(name: string, factory: () => T): [T, (fn: (x: T) =
 				x = factory()
 			},
 		})
+		console.log(fn(factory()), name)
 	}]
 }
 
@@ -79,19 +81,22 @@ const [, benchFunctionalRedBlackTree] = makeStockAndBench('functional-red-black-
 // }
 
 describe('initialize with 1,000,000 elements', () => {
-	benchSortedArrayReadOnly(() => new SortedArray(list))
-	benchArrayReadOnly(() => list.slice().sort((a, b) => a - b))
+	benchSortedArrayReadOnly(() => new SortedArray(list).length)
+	benchArrayReadOnly(() => list.slice().sort((a, b) => a - b).length)
 	benchAVLReadOnly(() => {
 		const tree = new AVLTree()
 		for (const val of list) tree.insert(val)
+		return tree.size
 	})
 	benchSplayReadOnly(() => {
 		const tree = new SplayTree()
 		for (const val of list) tree.insert(val)
+		return tree.size
 	})
 	benchFunctionalRedBlackTree(() => {
 		let tree = createRBTree<number, undefined>()
 		for (const val of list) tree = tree.insert(val, undefined)
+		return tree.length
 	})
 })
 
@@ -102,22 +107,27 @@ for (const [description, values] of Object.entries({
 })) describe(description, () => {
 	benchSortedArray(slt => {
 		for (const val of values) slt.add(val)
+		return slt.length
 	})
 
 	benchArray(arr => {
 		for (const val of values) insort(arr, val, (a, b) => a - b)
+		return arr.length
 	})
 
 	benchAVL(tree => {
 		for (const val of values) tree.insert(val)
+		return tree.size
 	})
 
 	benchSplay(tree => {
 		for (const val of values) tree.insert(val)
+		return tree.size
 	})
 
 	benchFunctionalRedBlackTree(tree => {
 		for (const val of values) tree = tree.insert(val, undefined)
+		return tree.length
 	})
 })
 
@@ -155,6 +165,7 @@ describe('iterate over all elements', () => {
 	benchSortedArrayReadOnly(slt => {
 		let sum = 0
 		for (const x of slt) sum += x
+		return sum
 	})
 
 	benchArrayReadOnly(arr => {
@@ -177,7 +188,7 @@ describe('iterate over all elements', () => {
 
 	benchFunctionalRedBlackTree(tree => {
 		let sum = 0
-		tree.forEach(x => sum += x)
+		tree.forEach(x => { sum += x })
 		return sum
 	})
 })
@@ -211,7 +222,7 @@ describe('iterate over elements between 499500 and 500500', () => {
 
 	benchFunctionalRedBlackTree(tree => {
 		let sum = 0
-		tree.forEach(x => sum += x, 499500, 500501)
+		tree.forEach(x => { sum += x }, 499500, 500501)
 		return sum
 	})
 })
@@ -226,7 +237,7 @@ describe('index at 499500', () => {
 
 describe('test for 499500', () => {
 	benchSortedArrayReadOnly(slt => slt.includes(499500))
-	benchArrayReadOnly(arr => bisectLeft(arr, 499500, (a, b) => a - b) === 499500)
+	benchArrayReadOnly(arr => arr[bisectLeft(arr, 499500, (a, b) => a - b)] === 499500)
 	benchAVLReadOnly(tree => tree.contains(499500))
 	benchSplayReadOnly(tree => tree.contains(499500))
 	benchFunctionalRedBlackTree(tree => tree.find(499500).valid)
