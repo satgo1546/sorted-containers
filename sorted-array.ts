@@ -50,7 +50,6 @@ const defaultComparator = <T>(a: T, b: T): number => {
  * - {@link SortedArray#length}
  * - {@link SortedArray#toJSON}
  * - {@link SortedArray#toString}
- * - {@link SortedArray#_check}
  */
 export class SortedArray<T> {
 	static readonly DEFAULT_LOAD_FACTOR = 1000
@@ -986,77 +985,100 @@ export class SortedArray<T> {
 	toString(): string {
 		return this._lists.toString()
 	}
-
-	/**
-	 * Check invariants of sorted array.
-	 */
-	_check(): void {
-		try {
-			assert(this._load >= 4)
-			assert(this._maxes.length === this._lists.length)
-			assert(this._len === this._lists.reduce((acc, list) => acc + list.length, 0))
-
-			// Check all sublists are sorted.
-			for (const sublist of this._lists) {
-				for (let pos = 1; pos < sublist.length; pos++) {
-					assert(this._cmp(sublist[pos - 1], sublist[pos])<=0)
-				}
-			}
-
-			// Check beginning/end of sublists are sorted.
-			for (let pos = 1; pos < this._lists.length; pos++) {
-				assert(this._cmp(this._lists[pos - 1][this._lists[pos - 1].length - 1], this._lists[pos][0])<=0)
-			}
-
-			// Check _maxes index is the last value of each sublist.
-			for (let pos = 0; pos < this._maxes.length; pos++) {
-				assert(Object.is(this._maxes[pos], this._lists[pos][this._lists[pos].length - 1]))
-			}
-
-			// Check sublist lengths are less than double load-factor.
-			const double = this._load << 1
-			assert(this._lists.every(list => list.length <= double))
-
-			// Check sublist lengths are greater than half load-factor for all but the last sublist.
-			const half = this._load >>> 1
-			for (let pos = 0; pos < this._lists.length - 1; pos++) {
-				assert(this._lists[pos].length >= half)
-			}
-
-			if (this._index.length) {
-				assert(this._len === this._index[0])
-				assert(this._index.length === this._offset + this._lists.length)
-
-				// Check index leaf nodes equal length of sublists.
-				for (let pos = 0; pos < this._lists.length; pos++) {
-					const leaf = this._index[this._offset + pos]
-					assert(leaf === this._lists[pos].length)
-				}
-
-				// Check index branch nodes are the sum of their children.
-				for (let pos = 0; pos < this._offset; pos++) {
-					const child = (pos << 1) + 1
-					if (child >= this._index.length) {
-						assert(this._index[pos] === 0)
-					} else if (child + 1 === this._index.length) {
-						assert(this._index[pos] === this._index[child])
-					} else {
-						const childSum = this._index[child] + this._index[child + 1]
-						assert(childSum === this._index[pos])
-					}
-				}
-			}
-		} catch (e) {
-			console.error('len', this._len)
-			console.error('load', this._load)
-			console.error('offset', this._offset)
-			console.error('index', this._index.length, this._index)
-			console.error('maxes', this._maxes.length, this._maxes)
-			console.error('lists', this._lists.length, this._lists)
-			throw e
-		}
-	}
 }
+
+/**
+ * Check invariants of sorted array.
+ *
+ * This is a function instead of a method so that it can be tree-shaken.
+ */
+export const checkSortedArray = (<T>(self: {
+	_load: number,
+	_cmp: (a: T, b: T) => number,
+	_len: number,
+	_lists: T[][],
+	_maxes: T[],
+	_index: number[],
+	_offset: number,
+}): void => {
+	try {
+		assert(self._load >= 4)
+		assert(self._maxes.length === self._lists.length)
+		assert(self._len === self._lists.reduce((acc, list) => acc + list.length, 0))
+
+		// Check comparator is reflexive.
+		for (const sublist of self._lists) {
+			for (const val of sublist) {
+				assert(self._cmp(val, val) == 0)
+			}
+		}
+
+		// Check all sublists are sorted.
+		for (const sublist of self._lists) {
+			for (let pos = 1; pos < sublist.length; pos++) {
+				const le = self._cmp(sublist[pos - 1], sublist[pos])
+				const ge = self._cmp(sublist[pos], sublist[pos - 1])
+				assert(le < 0 && ge > 0 || le === 0 && ge === 0)
+			}
+		}
+
+		// Check beginning/end of sublists are sorted.
+		for (let pos = 1; pos < self._lists.length; pos++) {
+			const l = self._lists[pos - 1][self._lists[pos - 1].length - 1]
+			const r = self._lists[pos][0]
+			const le = self._cmp(l, r)
+			const ge = self._cmp(r, l)
+			assert(le < 0 && ge > 0 || le === 0 && ge === 0)
+		}
+
+		// Check _maxes index is the last value of each sublist.
+		for (let pos = 0; pos < self._maxes.length; pos++) {
+			assert(Object.is(self._maxes[pos], self._lists[pos][self._lists[pos].length - 1]))
+		}
+
+		// Check sublist lengths are less than double load-factor.
+		const double = self._load << 1
+		assert(self._lists.every(list => list.length <= double))
+
+		// Check sublist lengths are greater than half load-factor for all but the last sublist.
+		const half = self._load >>> 1
+		for (let pos = 0; pos < self._lists.length - 1; pos++) {
+			assert(self._lists[pos].length >= half)
+		}
+
+		if (self._index.length) {
+			assert(self._len === self._index[0])
+			assert(self._index.length === self._offset + self._lists.length)
+
+			// Check index leaf nodes equal length of sublists.
+			for (let pos = 0; pos < self._lists.length; pos++) {
+				const leaf = self._index[self._offset + pos]
+				assert(leaf === self._lists[pos].length)
+			}
+
+			// Check index branch nodes are the sum of their children.
+			for (let pos = 0; pos < self._offset; pos++) {
+				const child = (pos << 1) + 1
+				if (child >= self._index.length) {
+					assert(self._index[pos] === 0)
+				} else if (child + 1 === self._index.length) {
+					assert(self._index[pos] === self._index[child])
+				} else {
+					const childSum = self._index[child] + self._index[child + 1]
+					assert(childSum === self._index[pos])
+				}
+			}
+		}
+	} catch (e) {
+		console.error('len', self._len)
+		console.error('load', self._load)
+		console.error('offset', self._offset)
+		console.error('index', self._index.length, self._index)
+		console.error('maxes', self._maxes.length, self._maxes)
+		console.error('lists', self._lists.length, self._lists)
+		throw e
+	}
+}) as unknown as <T>(self: SortedArray<T>) => void
 
 function assert(predicate: unknown): void {
 	if (!predicate) throw new Error('assertion failed')

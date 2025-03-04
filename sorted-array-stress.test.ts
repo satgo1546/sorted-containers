@@ -1,5 +1,5 @@
 import { test, expect } from 'vitest'
-import { SortedArray } from './sorted-array'
+import { SortedArray, checkSortedArray } from './sorted-array'
 import seedrandom from 'seedrandom'
 import { bisectLeft, bisectRight } from './bisect'
 
@@ -192,7 +192,7 @@ function testStress(repeat: number) {
 		const action = actions[actionNames[Math.floor(random() * actionNames.length)]]
 		action(slt)
 
-		slt._check()
+		checkSortedArray(slt)
 
 		const fourth = Math.floor(slt.length / 4)
 		let count = fourth === 0 ? 0 : Math.floor(random() * (fourth * 2)) - fourth
@@ -216,13 +216,13 @@ function testStress(repeat: number) {
 			slt_._lists.splice(pos, 1)
 			slt_._maxes.splice(pos, 1)
 			slt_._index = []
-			slt._check()
+			checkSortedArray(slt)
 		}
 
-		slt._check()
+		checkSortedArray(slt)
 	}
 
-	slt._check()
+	checkSortedArray(slt)
 
 	actions.stressUpdate(slt)
 
@@ -231,7 +231,7 @@ function testStress(repeat: number) {
 		slt.deleteAt(pos)
 	}
 
-	slt._check()
+	checkSortedArray(slt)
 }
 
 test('SortedArray stress test', () => {

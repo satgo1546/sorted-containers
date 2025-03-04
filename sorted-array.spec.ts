@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest'
-import { SortedArray } from './sorted-array'
+import { SortedArray, checkSortedArray } from './sorted-array'
 import seedrandom from 'seedrandom'
 
 function* range(start: number, end?: number, step: number = 1): Generator<number> {
@@ -14,15 +14,15 @@ function* range(start: number, end?: number, step: number = 1): Generator<number
 
 describe('SortedArray', () => {
 	test('init', () => {
-		let slt = new SortedArray(undefined, { loadFactor: 10000 })
-		slt._check()
+		let slt = new SortedArray<number>(undefined, { loadFactor: 10000 })
+		checkSortedArray(slt)
 
 		slt = new SortedArray(range(10000))
 		expect(Array.from(slt)).toStrictEqual(Array.from(range(10000)))
 
 		slt.clear()
 		expect(slt.length).toBe(0)
-		slt._check()
+		checkSortedArray(slt)
 	})
 
 	test('add', () => {
@@ -30,19 +30,19 @@ describe('SortedArray', () => {
 		const random = seedrandom('')
 		for (const val of range(1000)) {
 			slt.add(val)
-			slt._check()
+			checkSortedArray(slt)
 		}
 
 		slt = new SortedArray()
 		for (const val of range(1000, 0, -1)) {
 			slt.add(val)
-			slt._check()
+			checkSortedArray(slt)
 		}
 
 		slt = new SortedArray()
 		for (const val of range(1000)) {
 			slt.add(random())
-			slt._check()
+			checkSortedArray(slt)
 		}
 	})
 
@@ -50,15 +50,15 @@ describe('SortedArray', () => {
 		let slt = new SortedArray<number>
 		slt.update(range(1000))
 		expect(slt.length).toBe(1000)
-		slt._check()
+		checkSortedArray(slt)
 
 		slt.update(range(100))
 		expect(slt.length).toBe(1100)
-		slt._check()
+		checkSortedArray(slt)
 
 		slt.update(range(10000))
 		expect(slt.length).toBe(11100)
-		slt._check()
+		checkSortedArray(slt)
 
 		const values = [...range(1000), ...range(100), ...range(10000)].sort((a, b) => a - b)
 		expect(Array.from(slt)).toStrictEqual(values)
@@ -75,23 +75,23 @@ describe('SortedArray', () => {
 		}
 
 		expect(slt.includes(10000)).toBeFalsy()
-		slt._check()
+		checkSortedArray(slt)
 	})
 
 	test('discard', () => {
 		let slt = new SortedArray<number>
 		expect(slt.delete(0)).toBe(false)
 		expect(slt.length).toBe(0)
-		slt._check()
+		checkSortedArray(slt)
 
 		slt = new SortedArray([1, 2, 2, 2, 3, 3, 5], { loadFactor: 4 })
 
 		expect(slt.delete(6)).toBe(false)
-		slt._check()
+		checkSortedArray(slt)
 		expect(slt.delete(4)).toBe(false)
-		slt._check()
+		checkSortedArray(slt)
 		expect(slt.delete(2)).toBe(true)
-		slt._check()
+		checkSortedArray(slt)
 
 		expect(Array.from(slt)).toStrictEqual([1, 2, 2, 3, 3, 5])
 	})
@@ -113,10 +113,10 @@ describe('SortedArray', () => {
 
 	test('delete', () => {
 		let slt = new SortedArray(range(20), { loadFactor: 4 })
-		slt._check()
+		checkSortedArray(slt)
 		for (const val of range(20)) {
 			slt.delete(val)
-			slt._check()
+			checkSortedArray(slt)
 		}
 		expect(slt.length).toBe(0)
 	})
@@ -215,13 +215,13 @@ describe('SortedArray', () => {
 		while (slt.length > 0) {
 			const pos = Math.floor(random() * slt.length)
 			slt.deleteAt(pos)
-			slt._check()
+			checkSortedArray(slt)
 		}
 
 		slt = new SortedArray(range(100), { loadFactor: 17 })
 		slt.deleteSlice(0, slt.length)
 		expect(slt.length).toBe(0)
-		slt._check()
+		checkSortedArray(slt)
 	})
 
 	test('delitem_slice', () => {
@@ -322,7 +322,7 @@ describe('SortedArray', () => {
 		expect(slt.bisectLeft(0)).toBe(0)
 		slt = new SortedArray(range(100), { loadFactor: 17 })
 		slt.update(range(100))
-		slt._check()
+		checkSortedArray(slt)
 		expect(slt.bisectLeft(50)).toBe(100)
 		expect(slt.bisectLeft(200)).toBe(200)
 	})
@@ -332,7 +332,7 @@ describe('SortedArray', () => {
 		expect(slt.bisectRight(10)).toBe(0)
 		slt = new SortedArray(range(100), { loadFactor: 17 })
 		slt.update(range(100))
-		slt._check()
+		checkSortedArray(slt)
 		expect(slt.bisectRight(10)).toBe(22)
 		expect(slt.bisectRight(200)).toBe(200)
 	})
@@ -354,7 +354,7 @@ describe('SortedArray', () => {
 			for (const jjj of range(iii)) {
 				slt.add(iii)
 			}
-			slt._check()
+			checkSortedArray(slt)
 		}
 
 		for (const iii of range(100)) {
@@ -366,15 +366,15 @@ describe('SortedArray', () => {
 
 	test('pop', () => {
 		let slt = new SortedArray(range(10), { loadFactor: 4 })
-		slt._check()
+		checkSortedArray(slt)
 		expect(slt.pop()).toBe(9)
-		slt._check()
+		checkSortedArray(slt)
 		expect(slt.pop(0)).toBe(0)
-		slt._check()
+		checkSortedArray(slt)
 		expect(slt.pop(-2)).toBe(7)
-		slt._check()
+		checkSortedArray(slt)
 		expect(slt.pop(4)).toBe(5)
-		slt._check()
+		checkSortedArray(slt)
 	})
 
 	test('pop_indexerror1', () => {
@@ -394,7 +394,7 @@ describe('SortedArray', () => {
 
 	test('index', () => {
 		let slt = new SortedArray(range(100), { loadFactor: 17 })
-		slt._check()
+		checkSortedArray(slt)
 
 		for (const val of range(100)) {
 			expect(slt.indexOf(val)).toBe(val)
@@ -455,8 +455,8 @@ describe('SortedArray', () => {
 	test('mul', () => {
 		const thisList = new SortedArray(range(10), { loadFactor: 4 })
 		const thatList = thisList.concat(thisList).concat(thisList).concat(thisList).concat(thisList)
-		thisList._check()
-		thatList._check()
+		checkSortedArray(thisList)
+		checkSortedArray(thatList)
 		expect(Array.from(thisList)).toStrictEqual(Array.from(range(10)))
 		expect(Array.from(thatList)).toStrictEqual(Array.from(range(10)).flatMap(x => Array(5).fill(x)))
 		expect(thisList).not.toStrictEqual(thatList)
@@ -466,15 +466,15 @@ describe('SortedArray', () => {
 	test('imul', () => {
 		const thisList = new SortedArray(range(10), { loadFactor: 4 })
 		thisList.update(thisList)
-		thisList._check()
+		checkSortedArray(thisList)
 		thisList.update(thisList)
-		thisList._check()
+		checkSortedArray(thisList)
 		expect(Array.from(thisList)).toStrictEqual(Array.from(range(10)).flatMap(x => Array(4).fill(x)))
 	})
 
 	test('check', () => {
 		let slt = new SortedArray(range(10), { loadFactor: 4 })
 		Object.assign(slt, { _len: 5 })
-		expect(() => slt._check()).toThrow()
+		expect(() => checkSortedArray(slt)).toThrow()
 	})
 })
