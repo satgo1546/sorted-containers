@@ -1,13 +1,19 @@
-import { bisectLeft, bisectRight, insort } from './bisect'
+import { bisectLeft, bisectRight, insort } from './bisect.ts'
+
+const defaultComparator = <T>(a: T, b: T): number => {
+	if (a === b) return 0
+	if (a < b) return -1
+	if (a > b) return 1
+	return 0
+}
 
 /**
  * Sorted array is a sorted mutable collection.
  *
  * Sorted array values are maintained in sorted order.
  *
- * Sorted array values must be comparable.
+ * Sorted array values must have a total ordering.
  * The total ordering of values must not change while they are stored in the sorted array.
- * 【TODO: check compareFn】
  *
  * Methods for adding values:
  *
@@ -49,6 +55,7 @@ import { bisectLeft, bisectRight, insort } from './bisect'
 export class SortedArray<T> {
 	static readonly DEFAULT_LOAD_FACTOR = 1000
 	private readonly _load: number
+	private readonly _cmp: (a: T, b: T) => number
 
 	private _len = 0
 	private _lists: T[][] = []
@@ -62,22 +69,34 @@ export class SortedArray<T> {
 	 * Optional `iterable` argument provides an initial iterable of values to initialize the sorted array.
 	 *
 	 * @param iterable - Initial values (optional).
+	 *
 	 * @param {object} options - An object that specifies characteristics about the sorted container.
+	 * @param options.comparator - Function used to determine the order of the elements.
+	 * It should return a negative number if the first argument is less than the second argument,
+	 * a positive number if the first argument is greater than the second argument, or a zero otherwise.
+	 * The comparator should always return a number, and never return NaN.
+	 * In addition, the comparator has the same requirements as the parameter of `Array.prototype.sort`
+	 * (purity, stability, reflexivity, anti-symmetry, and transitivity).
+	 *
+	 * If omitted, the elements are compared with `<` and `>` operators.
+	 * 
+	 * 【TODO: add link to docs explaining】
+	 *
 	 * @param options.loadFactor - Specifies the load-factor for sorted array sublists.
 	 * The default load factor of 1000 works well for lists from tens to tens-of-millions of values.
 	 * Good practice is to use a value that is the cube root of the list size.
 	 * With billions of elements, the best load factor depends on your usage.
 	 * It's best to leave the load factor at the default until you start benchmarking.
-	 * @param options.compareFn - 【TODO】
 	 *
 	 * @see https://grantjenks.com/docs/sortedcontainers/implementation.html
 	 * @see https://grantjenks.com/docs/sortedcontainers/performance-scale.html
 	 */
 	constructor(iterable?: Iterable<T>, options?: {
-		loadFactor: number,
-		// compareFn: (a: T, b: T) => number,
+		comparator?: (a: T, b: T) => number,
+		loadFactor?: number,
 	}) {
 		this._load = options?.loadFactor ?? SortedArray.DEFAULT_LOAD_FACTOR
+		this._cmp = options?.comparator ?? defaultComparator
 		if (iterable) {
 			this.update(iterable)
 		}
@@ -108,14 +127,14 @@ export class SortedArray<T> {
 	 */
 	add(value: T): void {
 		if (this._maxes.length) {
-			let pos = bisectRight(this._maxes, value)
+			let pos = bisectRight(this._maxes, value, this._cmp)
 
 			if (pos === this._maxes.length) {
 				pos--
 				this._lists[pos].push(value)
 				this._maxes[pos] = value
 			} else {
-				insort(this._lists[pos], value)
+				insort(this._lists[pos], value, this._cmp)
 			}
 
 			this._expand(pos)
@@ -167,13 +186,13 @@ export class SortedArray<T> {
 	 * @param iterable - Iterable of values to add.
 	 */
 	update(iterable: Iterable<T>): void {
-		let values = Array.from(iterable).sort((a, b) => a < b ? -1 : a > b ? 1 : 0)
+		let values = Array.from(iterable).sort(this._cmp)
 
 		if (this._maxes.length) {
 			if (values.length * 4 >= this._len) {
 				this._lists.push(values)
 				values = this._lists.flat()
-				values.sort((a, b) => a < b ? -1 : a > b ? 1 : 0)
+				values.sort(this._cmp)
 				this.clear()
 			} else {
 				for (const val of values) this.add(val)
@@ -204,10 +223,10 @@ export class SortedArray<T> {
 	includes(value: T): boolean {
 		if (!this._maxes.length) return false
 
-		const pos = bisectLeft(this._maxes, value)
+		const pos = bisectLeft(this._maxes, value, this._cmp)
 		if (pos === this._maxes.length) return false
 
-		const idx = bisectLeft(this._lists[pos], value)
+		const idx = bisectLeft(this._lists[pos], value, this._cmp)
 		return this._lists[pos][idx] === value
 	}
 
@@ -227,10 +246,10 @@ export class SortedArray<T> {
 	delete(value: T): boolean {
 		if (!this._maxes.length) return false
 
-		const pos = bisectLeft(this._maxes, value)
+		const pos = bisectLeft(this._maxes, value, this._cmp)
 		if (pos === this._maxes.length) return false
 
-		const idx = bisectLeft(this._lists[pos], value)
+		const idx = bisectLeft(this._lists[pos], value, this._cmp)
 		if (this._lists[pos][idx] !== value) return false
 
 		this._delete(pos, idx)
@@ -543,7 +562,7 @@ export class SortedArray<T> {
 
 	/**
 	 * Lookup value at `index` in sorted array.
-	 * 
+	 *
 	 * If `index` is out of range, returns `undefined`.
 	 *
 	 * @example
@@ -714,13 +733,13 @@ export class SortedArray<T> {
 			minIdx = 0
 		} else {
 			if (includeMinimum) {
-				minPos = bisectLeft(this._maxes, minimum)
+				minPos = bisectLeft(this._maxes, minimum, this._cmp)
 				if (minPos === this._maxes.length) return [][Symbol.iterator]()
-				minIdx = bisectLeft(this._lists[minPos], minimum)
+				minIdx = bisectLeft(this._lists[minPos], minimum, this._cmp)
 			} else {
-				minPos = bisectRight(this._maxes, minimum)
+				minPos = bisectRight(this._maxes, minimum, this._cmp)
 				if (minPos === this._maxes.length) return [][Symbol.iterator]()
-				minIdx = bisectRight(this._lists[minPos], minimum)
+				minIdx = bisectRight(this._lists[minPos], minimum, this._cmp)
 			}
 		}
 
@@ -730,20 +749,20 @@ export class SortedArray<T> {
 			maxIdx = this._lists[maxPos].length
 		} else {
 			if (includeMaximum) {
-				maxPos = bisectRight(this._maxes, maximum)
+				maxPos = bisectRight(this._maxes, maximum, this._cmp)
 				if (maxPos === this._maxes.length) {
 					maxPos--
 					maxIdx = this._lists[maxPos].length
 				} else {
-					maxIdx = bisectRight(this._lists[maxPos], maximum)
+					maxIdx = bisectRight(this._lists[maxPos], maximum, this._cmp)
 				}
 			} else {
-				maxPos = bisectLeft(this._maxes, maximum)
+				maxPos = bisectLeft(this._maxes, maximum, this._cmp)
 				if (maxPos === this._maxes.length) {
 					maxPos--
 					maxIdx = this._lists[maxPos].length
 				} else {
-					maxIdx = bisectLeft(this._lists[maxPos], maximum)
+					maxIdx = bisectLeft(this._lists[maxPos], maximum, this._cmp)
 				}
 			}
 		}
@@ -772,9 +791,9 @@ export class SortedArray<T> {
 	 */
 	bisectLeft(value: T): number {
 		if (!this._maxes.length) return 0
-		const pos = bisectLeft(this._maxes, value)
+		const pos = bisectLeft(this._maxes, value, this._cmp)
 		if (pos === this._maxes.length) return this._len
-		const idx = bisectLeft(this._lists[pos], value)
+		const idx = bisectLeft(this._lists[pos], value, this._cmp)
 		return this._loc(pos, idx)
 	}
 
@@ -792,9 +811,9 @@ export class SortedArray<T> {
 	 */
 	bisectRight(value: T): number {
 		if (!this._maxes.length) return 0
-		const pos = bisectRight(this._maxes, value)
+		const pos = bisectRight(this._maxes, value, this._cmp)
 		if (pos === this._maxes.length) return this._len
-		const idx = bisectRight(this._lists[pos], value)
+		const idx = bisectRight(this._lists[pos], value, this._cmp)
 		return this._loc(pos, idx)
 	}
 
@@ -811,16 +830,16 @@ export class SortedArray<T> {
 	count(value: T): number {
 		if (!this._maxes.length) return 0
 
-		const posLeft = bisectLeft(this._maxes, value)
+		const posLeft = bisectLeft(this._maxes, value, this._cmp)
 		if (posLeft === this._maxes.length) return 0
-		const idxLeft = bisectLeft(this._lists[posLeft], value)
+		const idxLeft = bisectLeft(this._lists[posLeft], value, this._cmp)
 
-		const posRight = bisectRight(this._maxes, value)
+		const posRight = bisectRight(this._maxes, value, this._cmp)
 		if (posRight === this._maxes.length) {
 			return this._len - this._loc(posLeft, idxLeft)
 		}
 
-		const idxRight = bisectRight(this._lists[posRight], value)
+		const idxRight = bisectRight(this._lists[posRight], value, this._cmp)
 
 		if (posLeft === posRight) {
 			return idxRight - idxLeft
@@ -915,11 +934,11 @@ export class SortedArray<T> {
 
 		if (end <= start) return -1
 
-		const posLeft = bisectLeft(this._maxes, value)
+		const posLeft = bisectLeft(this._maxes, value, this._cmp)
 		if (posLeft === this._maxes.length) return -1
 
-		const idxLeft = bisectLeft(this._lists[posLeft], value)
-		if (this._lists[posLeft][idxLeft] !== value) return -1
+		const idxLeft = bisectLeft(this._lists[posLeft], value, this._cmp)
+		if (this._cmp(this._lists[posLeft][idxLeft], value)) return -1
 
 		end--
 		const left = this._loc(posLeft, idxLeft)
@@ -980,18 +999,18 @@ export class SortedArray<T> {
 			// Check all sublists are sorted.
 			for (const sublist of this._lists) {
 				for (let pos = 1; pos < sublist.length; pos++) {
-					assert(sublist[pos - 1] <= sublist[pos])
+					assert(this._cmp(sublist[pos - 1], sublist[pos])<=0)
 				}
 			}
 
 			// Check beginning/end of sublists are sorted.
 			for (let pos = 1; pos < this._lists.length; pos++) {
-				assert(this._lists[pos - 1][this._lists[pos - 1].length - 1] <= this._lists[pos][0])
+				assert(this._cmp(this._lists[pos - 1][this._lists[pos - 1].length - 1], this._lists[pos][0])<=0)
 			}
 
 			// Check _maxes index is the last value of each sublist.
 			for (let pos = 0; pos < this._maxes.length; pos++) {
-				assert(this._maxes[pos] === this._lists[pos][this._lists[pos].length - 1])
+				assert(Object.is(this._maxes[pos], this._lists[pos][this._lists[pos].length - 1]))
 			}
 
 			// Check sublist lengths are less than double load-factor.

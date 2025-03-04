@@ -89,7 +89,7 @@ describe('initialize with 1,000,000 elements', () => {
 		const tree = new SplayTree()
 		for (const val of list) tree.insert(val)
 	})
-	benchFunctionalRedBlackTree(() =>{
+	benchFunctionalRedBlackTree(() => {
 		let tree = createRBTree<number, undefined>()
 		for (const val of list) tree = tree.insert(val, undefined)
 	})
@@ -105,7 +105,7 @@ for (const [description, values] of Object.entries({
 	})
 
 	benchArray(arr => {
-		for (const val of values) insort(arr, val)
+		for (const val of values) insort(arr, val, (a, b) => a - b)
 	})
 
 	benchAVL(tree => {
@@ -190,8 +190,8 @@ describe('iterate over elements between 499500 and 500500', () => {
 	})
 
 	benchArrayReadOnly(arr => {
-		const l = bisectLeft(arr, 499500)
-		const r = bisectRight(arr, 500500)
+		const l = bisectLeft(arr, 499500, (a, b) => a - b)
+		const r = bisectRight(arr, 500500, (a, b) => a - b)
 		let sum = 0
 		for (let i = l; i < r; i++) sum += arr[i]
 		return sum
@@ -199,13 +199,13 @@ describe('iterate over elements between 499500 and 500500', () => {
 
 	benchAVLReadOnly(tree => {
 		let sum = 0
-		tree.range(499500, 500500, ({ key }) => {sum += key})
+		tree.range(499500, 500500, ({ key }) => { sum += key })
 		return sum
 	})
 
 	benchSplayReadOnly(tree => {
 		let sum = 0
-		tree.range(499500, 500500, ({ key }) => {sum += key})
+		tree.range(499500, 500500, ({ key }) => { sum += key })
 		return sum
 	})
 
@@ -226,7 +226,7 @@ describe('index at 499500', () => {
 
 describe('test for 499500', () => {
 	benchSortedArrayReadOnly(slt => slt.includes(499500))
-	benchArrayReadOnly(arr => bisectLeft(arr, 499500) === 499500)
+	benchArrayReadOnly(arr => bisectLeft(arr, 499500, (a, b) => a - b) === 499500)
 	benchAVLReadOnly(tree => tree.contains(499500))
 	benchSplayReadOnly(tree => tree.contains(499500))
 	benchFunctionalRedBlackTree(tree => tree.find(499500).valid)
@@ -234,7 +234,7 @@ describe('test for 499500', () => {
 
 describe('count 499500', () => {
 	benchSortedArrayReadOnly(slt => slt.count(499500))
-	benchArrayReadOnly(arr => bisectRight(arr, 499500) - bisectLeft(arr, 499500))
+	benchArrayReadOnly(arr => bisectRight(arr, 499500, (a, b) => a - b) - bisectLeft(arr, 499500, (a, b) => a - b))
 	benchFunctionalRedBlackTree(tree => tree.gt(499500).index - tree.ge(499500).index)
 })
 
@@ -245,7 +245,7 @@ describe('indexOf 499500', () => {
 	})
 
 	benchArrayReadOnly(arr => {
-		const i = bisectLeft(arr, 499500)
+		const i = bisectLeft(arr, 499500, (a, b) => a - b)
 		return arr[i] === 499500 ? i : undefined
 	})
 

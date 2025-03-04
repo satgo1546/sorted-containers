@@ -125,14 +125,14 @@ const actions = {
 		const values = Array.from(slt)
 		const value = random()
 		values.sort((a, b) => a - b)
-		expect(bisectLeft(values, value)).toBe(slt.bisectLeft(value))
+		expect(bisectLeft(values, value, (a, b) => a - b)).toBe(slt.bisectLeft(value))
 	},
 
 	stressBisectRight(slt: SortedArray<number>) {
 		const values = Array.from(slt)
 		const value = random()
 		values.sort((a, b) => a - b)
-		expect(bisectRight(values, value)).toBe(slt.bisectRight(value))
+		expect(bisectRight(values, value, (a, b) => a - b)).toBe(slt.bisectRight(value))
 	},
 
 	stressDups(slt: SortedArray<number>) {

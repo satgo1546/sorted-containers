@@ -1,7 +1,8 @@
-export function bisectLeft<T>(a: T[], x: T, lo = 0, hi = a.length): number {
+export const bisectLeft = <T>(a: T[], x: T, cmp: (a: T, b: T) => number): number => {
+	let lo = 0, hi = a.length
 	while (lo < hi) {
 		const mid = lo + (hi - lo >>> 1)
-		if (a[mid] < x) {
+		if (cmp(a[mid], x) < 0) {
 			lo = mid + 1
 		} else {
 			hi = mid
@@ -10,10 +11,11 @@ export function bisectLeft<T>(a: T[], x: T, lo = 0, hi = a.length): number {
 	return lo
 }
 
-export function bisectRight<T>(a: T[], x: T, lo = 0, hi = a.length): number {
+export const bisectRight = <T>(a: T[], x: T, cmp: (a: T, b: T) => number): number => {
+	let lo = 0, hi = a.length
 	while (lo < hi) {
 		const mid = lo + (hi - lo >>> 1)
-		if (x < a[mid]) {
+		if (cmp(x, a[mid]) < 0) {
 			hi = mid
 		} else {
 			lo = mid + 1
@@ -22,6 +24,6 @@ export function bisectRight<T>(a: T[], x: T, lo = 0, hi = a.length): number {
 	return lo
 }
 
-export function insort<T>(a: T[], x: T): void {
-	a.splice(bisectRight(a, x), 0, x)
+export const insort = <T>(a: T[], x: T, cmp: (a: T, b: T) => number): void => {
+	a.splice(bisectRight(a, x, cmp), 0, x)
 }
