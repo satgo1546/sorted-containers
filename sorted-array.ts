@@ -983,7 +983,7 @@ export class SortedArray<T> {
 	 * @returns - New sorted array.
 	 */
 	concat(other: Iterable<T>): SortedArray<T> {
-		return new SortedArray([...this._lists.flat(), ...other])
+		return new SortedArray([...this._lists.flat(), ...other], { comparator: this._cmp })
 	}
 
 	/**
