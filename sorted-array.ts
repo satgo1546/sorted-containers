@@ -601,12 +601,23 @@ export class SortedArray<T> {
 	/**
 	 * Return an iterator over the sorted array.
 	 *
-	 * Iterating the sorted array while adding or deleting values may throw an error or fail to iterate over all values.
+	 * Iterating a SortedArray while adding or deleting elements may throw an error or silently fail to iterate over all elements.
 	 */
-	*[Symbol.iterator](): IterableIterator<T> {
-		for (const list of this._lists) {
-			yield* list
-		}
+	[Symbol.iterator](): IterableIterator<T> {
+		if (!this._len) return [][Symbol.iterator]()
+		const maxPos = this._lists.length - 1
+		return this._islice(0, 0, maxPos, this._lists[maxPos].length, false)
+	}
+
+	/**
+	 * Return a reverse iterator over the SortedArray.
+	 *
+	 * Iterating a SortedArray while adding or deleting elements may throw an error or silently fail to iterate over all elements.
+	 */
+	reversed(): IterableIterator<T> {
+		if (!this._len) return [][Symbol.iterator]()
+		const maxPos = this._lists.length - 1
+		return this._islice(0, 0, maxPos, this._lists[maxPos].length, true)
 	}
 
 	/**
@@ -619,6 +630,8 @@ export class SortedArray<T> {
 	 * Both `start` and `stop` default to `undefined` which is automatically inclusive of the beginning and end of the sorted array.
 	 *
 	 * When `reverse` is `true` the values are yielded from the iterator in reverse order; `reverse` defaults to `false`.
+	 *
+	 * Iterating a SortedArray while adding or deleting elements may throw an error or silently fail to iterate over all elements.
 	 *
 	 * @example
 	 * const sl = new SortedArray('abcdefghij');
@@ -660,43 +673,43 @@ export class SortedArray<T> {
 	 *
 	 * When `reverse` is `true`, values are yielded from the iterator in reverse order.
 	 */
-	private *_islice(minPos: number, minIdx: number, maxPos: number, maxIdx: number, reverse: boolean): IterableIterator<T> {
-		if (minPos > maxPos) return
-
-		if (minPos === maxPos) {
-			if (reverse) {
-				for (let idx = maxIdx - 1; idx >= minIdx; idx--) {
-					yield this._lists[minPos][idx]
-				}
-			} else {
-				for (let idx = minIdx; idx < maxIdx; idx++) {
-					yield this._lists[minPos][idx]
-				}
-			}
-			return
-		}
-
+	private _islice(minPos: number, minIdx: number, maxPos: number, maxIdx: number, reverse: boolean): IterableIterator<T> {
+		// Rolling our own Iterator object in this case is both simpler and more performant than using a generator function.
 		if (reverse) {
-			for (let idx = maxIdx - 1; idx >= 0; idx--) {
-				yield this._lists[maxPos][idx]
-			}
-			for (let pos = maxPos - 1; pos > minPos; pos--) {
-				for (let idx = this._lists[pos].length - 1; idx >= 0; idx--) {
-					yield this._lists[pos][idx]
-				}
-			}
-			for (let idx = this._lists[minPos].length - 1; idx >= minIdx; idx--) {
-				yield this._lists[minPos][idx]
+			let pos = maxPos
+			let idx = maxIdx
+			return {
+				// @ts-ignore
+				__proto__: Iterator.prototype,
+				next: () => {
+					if (pos < minPos || pos === minPos && idx <= minIdx) {
+						return { value: undefined, done: true }
+					}
+					idx--
+					if (idx < 0) {
+						pos--
+						idx += this._lists[pos].length
+					}
+					return { value: this._lists[pos][idx], done: false }
+				},
 			}
 		} else {
-			for (let idx = minIdx; idx < this._lists[minPos].length; idx++) {
-				yield this._lists[minPos][idx]
-			}
-			for (let pos = minPos + 1; pos < maxPos; pos++) {
-				yield* this._lists[pos]
-			}
-			for (let idx = 0; idx < maxIdx; idx++) {
-				yield this._lists[maxPos][idx]
+			let pos = minPos
+			let idx = minIdx
+			return {
+				// @ts-ignore
+				__proto__: Iterator.prototype,
+				next: () => {
+					if (pos > maxPos || pos === maxPos && idx >= maxIdx) {
+						return { value: undefined, done: true }
+					}
+					const ret = { value: this._lists[pos][idx++], done: false }
+					if (idx >= this._lists[pos].length) {
+						pos++
+						idx = 0
+					}
+					return ret
+				},
 			}
 		}
 	}
@@ -710,6 +723,8 @@ export class SortedArray<T> {
 	 * Both arguments default to `true` such that the range is inclusive of both minimum and maximum.
 	 *
 	 * When `reverse` is `true` the values are yielded from the iterator in reverse order; `reverse` defaults to `false`.
+	 *
+	 * Iterating a SortedArray while adding or deleting elements may throw an error or silently fail to iterate over all elements.
 	 *
 	 * @example
 	 * const sl = new SortedArray('abcdefghij');

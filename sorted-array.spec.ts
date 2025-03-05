@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest'
-import { SortedArray, checkSortedArray } from './sorted-array'
+import { SortedArray, checkSortedArray } from './sorted-array.ts'
 import seedrandom from 'seedrandom'
 
 function* range(start: number, end?: number, step: number = 1): Generator<number> {
@@ -7,8 +7,10 @@ function* range(start: number, end?: number, step: number = 1): Generator<number
 		end = start
 		start = 0
 	}
-	for (let i = start; i < end; i += step) {
-		yield i
+	if (step > 0) {
+		for (let i = start; i < end; i += step) yield i
+	} else {
+		for (let i = start; i > end; i += step) yield i
 	}
 }
 
@@ -235,6 +237,12 @@ describe('SortedArray', () => {
 		let slt = new SortedArray(range(10000))
 		const itr = slt[Symbol.iterator]()
 		expect(Array.from(itr)).toStrictEqual(Array.from(range(10000)))
+	})
+
+	test('iter', () => {
+		let slt = new SortedArray(range(10000))
+		const rev = slt.reversed()
+		expect(Array.from(rev)).toStrictEqual(Array.from(range(9999, -1, -1)))
 	})
 
 	test('islice', () => {
