@@ -78,7 +78,7 @@ export class SortedArray<T> {
 	 * (purity, stability, reflexivity, anti-symmetry, and transitivity).
 	 *
 	 * If omitted, the elements are compared with `<` and `>` operators.
-	 * 
+	 * These operators violate transitivity if the inputs have mixed types or include NaN.
 	 * 【TODO: add link to docs explaining】
 	 *
 	 * @param options.loadFactor - Specifies the load-factor for sorted array sublists.
@@ -226,7 +226,7 @@ export class SortedArray<T> {
 		if (pos === this._maxes.length) return false
 
 		const idx = bisectLeft(this._lists[pos], value, this._cmp)
-		return this._lists[pos][idx] === value
+		return !this._cmp(this._lists[pos][idx], value)
 	}
 
 	/**
@@ -249,7 +249,7 @@ export class SortedArray<T> {
 		if (pos === this._maxes.length) return false
 
 		const idx = bisectLeft(this._lists[pos], value, this._cmp)
-		if (this._lists[pos][idx] !== value) return false
+		if (this._cmp(this._lists[pos][idx], value)) return false
 
 		this._delete(pos, idx)
 		return true
@@ -852,7 +852,6 @@ export class SortedArray<T> {
 		if (posRight === this._maxes.length) {
 			return this._len - this._loc(posLeft, idxLeft)
 		}
-
 		const idxRight = bisectRight(this._lists[posRight], value, this._cmp)
 
 		if (posLeft === posRight) {
