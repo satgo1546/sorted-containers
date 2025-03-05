@@ -348,10 +348,15 @@ describe('SortedArray', () => {
 
 	test('copy', () => {
 		const alpha = new SortedArray(range(100), { loadFactor: 7 })
-		const beta = new SortedArray(alpha)
+		const beta = alpha.clone()
+		expect(beta instanceof SortedArray).toBe(true)
+		checkSortedArray(beta)
+		expect(Array.from(beta)).toStrictEqual(Array.from(alpha))
 		alpha.add(100)
 		expect(alpha.length).toBe(101)
 		expect(beta.length).toBe(100)
+		beta.add(100)
+		expect(Array.from(beta)).toStrictEqual(Array.from(alpha))
 	})
 
 	test('count', () => {
@@ -875,10 +880,15 @@ describe('SortedArray modulo 10', () => {
 
 	test('copy', () => {
 		const slt = new SortedArray(range(100), { comparator: moduloComparator, loadFactor: 7 })
-		const two = new SortedArray(slt, { comparator: moduloComparator })
+		const two = slt.clone()
+		expect(two instanceof SortedArray).toBe(true)
+		checkSortedArray(two)
+		expect(Array.from(two)).toStrictEqual(Array.from(slt))
 		slt.add(100)
 		expect(slt.length).toBe(101)
 		expect(two.length).toBe(100)
+		two.add(100)
+		expect(Array.from(two)).toStrictEqual(Array.from(slt))
 	})
 
 	test('count', () => {
@@ -1345,10 +1355,15 @@ describe('SortedArray negate', () => {
 
 	test('copy', () => {
 		const slt = new SortedArray(range(100), { comparator: negateComparator, loadFactor: 7 })
-		const two = new SortedArray(slt, { comparator: negateComparator })
+		const two = slt.clone()
+		expect(two instanceof SortedArray).toBe(true)
+		checkSortedArray(two)
+		expect(Array.from(two)).toStrictEqual(Array.from(slt))
 		slt.add(100)
 		expect(slt.length).toBe(101)
 		expect(two.length).toBe(100)
+		two.add(100)
+		expect(Array.from(two)).toStrictEqual(Array.from(slt))
 	})
 
 	test('count', () => {

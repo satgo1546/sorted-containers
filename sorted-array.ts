@@ -46,6 +46,7 @@ const defaultComparator = <T>(a: T, b: T): number => {
  *
  * Miscellaneous methods and properties:
  *
+ * - {@link SortedArray#clone}
  * - {@link SortedArray#concat}
  * - {@link SortedArray#length}
  * - {@link SortedArray#toJSON}
@@ -861,6 +862,21 @@ export class SortedArray<T> {
 		const right = this._loc(posRight, idxRight)
 		const left = this._loc(posLeft, idxLeft)
 		return right - left
+	}
+
+	/**
+	 * Return a shallow copy of the SortedArray.
+	 *
+	 * @returns - A new SortedArray.
+	 */
+	clone(): SortedArray<T> {
+		return {
+			__proto__: SortedArray.prototype,
+			...this,
+			_lists: this._lists.map(sublist => sublist.slice()),
+			_maxes: this._maxes.slice(),
+			_index: this._index.slice(),
+		}
 	}
 
 	/**
