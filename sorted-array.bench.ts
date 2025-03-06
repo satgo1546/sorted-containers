@@ -49,7 +49,6 @@ function makeStockAndBench<T>(name: string, factory: () => T): [T, (fn: (x: T) =
 
 const [, benchSortedArrayReadOnly, benchSortedArray] = makeStockAndBench('SortedArray', () => {
 	// Insert values one by one instead of `new SortedArray(list)` to align with other implementations.
-	// This will cause `add` to be optimized.
 	const slt = new SortedArray<number>()
 	for (const val of list) slt.add(val)
 	return slt
@@ -127,6 +126,39 @@ for (const [description, values] of Object.entries({
 
 	benchFunctionalRedBlackTree(tree => {
 		for (const val of values) tree = tree.insert(val, undefined)
+		return tree.length
+	})
+})
+
+for (const [description, values] of Object.entries({
+	'delete 1000 random elements': Array.from({ length: 1000 }, () => stockArray[Math.floor(random() * stockArray.length)]),
+	'delete 1000 random nonexistent elements': Array.from({ length: 1000 }, () => Math.floor(random() * stockArray.length) * 2 + 1),
+})) describe(description, () => {
+	benchSortedArray(slt => {
+		for (const val of values) slt.delete(val)
+		return slt.length
+	})
+
+	benchArray(arr => {
+		for (const val of values) {
+			const i = bisectLeft(arr, val, (a, b) => a - b)
+			if (arr[i] === val) arr.splice(i, 1)
+		}
+		return arr.length
+	})
+
+	benchAVL(tree => {
+		for (const val of values) tree.remove(val)
+		return tree.size
+	})
+
+	benchSplay(tree => {
+		for (const val of values) tree.remove(val)
+		return tree.size
+	})
+
+	benchFunctionalRedBlackTree(tree => {
+		for (const val of values) tree = tree.remove(val)
 		return tree.length
 	})
 })
@@ -227,47 +259,146 @@ describe('iterate over elements between 499500 and 500500', () => {
 	})
 })
 
-describe('index at 499500', () => {
-	benchSortedArrayReadOnly(slt => slt.at(499500))
-	benchArrayReadOnly(arr => arr[499500])
-	benchAVLReadOnly(tree => tree.at(499500)!.key)
-	benchSplayReadOnly(tree => tree.at(499500)!.key)
-	benchFunctionalRedBlackTree(tree => tree.at(499500).key)
-})
-
-describe('test for 499500', () => {
-	benchSortedArrayReadOnly(slt => slt.includes(499500))
-	benchArrayReadOnly(arr => arr[bisectLeft(arr, 499500, (a, b) => a - b)] === 499500)
-	benchAVLReadOnly(tree => tree.contains(499500))
-	benchSplayReadOnly(tree => tree.contains(499500))
-	benchFunctionalRedBlackTree(tree => tree.find(499500).valid)
-})
-
-describe('count 499500', () => {
-	benchSortedArrayReadOnly(slt => slt.count(499500))
-	benchArrayReadOnly(arr => bisectRight(arr, 499500, (a, b) => a - b) - bisectLeft(arr, 499500, (a, b) => a - b))
-	benchFunctionalRedBlackTree(tree => tree.gt(499500).index - tree.ge(499500).index)
-})
-
-describe('indexOf 499500', () => {
+describe('iterate over elements from 499500th to 500500th', () => {
 	benchSortedArrayReadOnly(slt => {
-		const i = slt.indexOf(499500)
-		return i !== -1 ? i : undefined
+		let sum = 0
+		for (const x of slt.islice(499500, 500500)) sum += x
+		return sum
 	})
 
 	benchArrayReadOnly(arr => {
-		const i = bisectLeft(arr, 499500, (a, b) => a - b)
-		return arr[i] === 499500 ? i : undefined
+		let sum = 0
+		for (let i = 499500; i < 500500; i++) sum += arr[i]
+		return sum
 	})
 
 	benchFunctionalRedBlackTree(tree => {
-		const { index, valid } = tree.find(499500)
-		return valid ? index : undefined
+		let sum = 0
+		for (let it = tree.at(499500); it.index < 500500; it.next()) sum += it.key!
+		return sum
+	})
+})
+
+describe('index from 499500th to 500500th', () => {
+	benchSortedArrayReadOnly(slt => {
+		let sum = 0
+		for (let i = 499500; i < 500500; i++) sum += slt.at(i)!
+		return sum
+	})
+
+	benchArrayReadOnly(arr => {
+		let sum = 0
+		for (let i = 499500; i < 500500; i++) sum += arr[i]
+		return sum
+	})
+
+	benchAVLReadOnly(tree => {
+		return tree.at(499500)!.key
+	})
+
+	benchSplayReadOnly(tree => {
+		return tree.at(499500)!.key
+	})
+
+	benchFunctionalRedBlackTree(tree => {
+		let sum = 0
+		for (let i = 499500; i < 500500; i++) sum += tree.at(i).key!
+		return sum
+	})
+})
+
+describe('test for 2000 elements where about half are nonexistent', () => {
+	const values = Array.from({ length: 2000 }, (_, i) => list[i * 100] + +(random() < .5))
+
+	benchSortedArrayReadOnly(slt => {
+		let sum = 0
+		for (const val of values) if (slt.includes(val)) sum++
+		return sum
+	})
+
+	benchArrayReadOnly(arr => {
+		let sum = 0
+		for (const val of values) if (arr[bisectLeft(arr, val, (a, b) => a - b)] === val) sum++
+		return sum
+	})
+
+	benchAVLReadOnly(tree => {
+		let sum = 0
+		for (const val of values) if (tree.contains(val)) sum++
+		return sum
+	})
+
+	benchSplayReadOnly(tree => {
+		let sum = 0
+		for (const val of values) if (tree.contains(val)) sum++
+		return sum
+	})
+
+	benchFunctionalRedBlackTree(tree => {
+		let sum = 0
+		for (const val of values) if (tree.find(val).valid) sum++
+		return sum
+	})
+})
+
+describe('count 1000 existing elements', () => {
+	const values = Array.from({ length: 1000 }, (_, i) => list[i * 100])
+
+	benchSortedArrayReadOnly(slt => {
+		let sum = 0
+		for (const val of values) sum += slt.count(val)
+		return sum
+	})
+
+	benchArrayReadOnly(arr => {
+		let sum = 0
+		for (const val of values) {
+			sum += bisectRight(arr, val, (a, b) => a - b) - bisectLeft(arr, val, (a, b) => a - b)
+		}
+		return sum
+	})
+
+	benchFunctionalRedBlackTree(tree => {
+		let sum = 0
+		for (const val of values) sum += tree.gt(val).index - tree.ge(val).index
+		return sum
+	})
+})
+
+describe('indexOf 2000 elements where about half are nonexistent with checks', () => {
+	const values = Array.from({ length: 2000 }, (_, i) => list[i * 100] + +(random() < .5))
+
+	benchSortedArrayReadOnly(slt => {
+		let sum = 0
+		for (const val of values) {
+			const i = slt.indexOf(val)
+			if (i >= 0) sum += i
+		}
+		return sum
+	})
+
+	benchArrayReadOnly(arr => {
+		let sum = 0
+		for (const val of values) {
+			const i = bisectLeft(arr, val, (a, b) => a - b)
+			if (arr[i] === val) sum += i
+		}
+		return sum
+	})
+
+	benchFunctionalRedBlackTree(tree => {
+		let sum = 0
+		for (const val of values) {
+			const { index, valid } = tree.find(val)
+			if (valid) sum += index
+		}
+		return sum
 	})
 })
 
 describe('convert to Array', () => {
 	benchSortedArrayReadOnly(slt => slt.slice().length)
+	benchArrayReadOnly(arr => arr.slice().length)
 	benchAVLReadOnly(tree => tree.keys().length)
 	benchSplayReadOnly(tree => tree.keys().length)
 	benchFunctionalRedBlackTree(tree => tree.keys.length)
