@@ -1,1 +1,1 @@
-export { SortedArray } from './sorted-array'
+export { SortedArray } from './src/sorted-array.ts'
