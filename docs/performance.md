@@ -11,7 +11,8 @@ SortedArray:
   Searching is done by bisecting; insertion and deletion is done by `Array.prototype.splice`.
 - **[avl](https://www.npmjs.com/package/avl)**:
 - **[splaytree](https://www.npmjs.com/package/splaytree)**:
-  With the same API as `avl`.
+  With an API similar to `avl`.
+- **[jstreemap](https://kirusi.github.io/jstreemap/) TreeMultiSet**:
 - **[functional-red-black-tree](https://www.npmjs.com/package/functional-red-black-tree)**:
   While it is unfair to compare performance between mutable and persistent data structures, this package is popular and feature-rich, and nevertheless is included for completeness. Keep in mind that persistent structures are generally slower to update in JavaScript.
 

@@ -3,6 +3,7 @@ import seedrandom from 'seedrandom'
 import { SortedArray } from './sorted-array.ts'
 import { AVLTree } from 'avl'
 import SplayTree from 'splaytree'
+import { TreeMultiSet } from 'jstreemap'
 import createRBTree from 'functional-red-black-tree'
 import { bisectLeft, bisectRight, insort } from './bisect.ts'
 
@@ -32,6 +33,11 @@ const [, benchSplayReadOnly, benchSplay] = makeStockAndBench('splaytree', () => 
 	for (const val of list) tree.insert(val)
 	return tree
 })
+const [, benchTreeMultiSetReadOnly, benchTreeMultiSet] = makeStockAndBench('jstreemap TreeMultiSet', () => {
+	let set = new TreeMultiSet<number>()
+	for (const val of list) set.add(val)
+	return set
+})
 const [, benchFunctionalRedBlackTree] = makeStockAndBench('functional-red-black-tree', () => {
 	let tree = createRBTree<number, undefined>()
 	for (const val of list) tree = tree.insert(val, undefined)
@@ -50,6 +56,11 @@ describe('initialize with 1,000,000 elements', () => {
 		const tree = new SplayTree()
 		for (const val of list) tree.insert(val)
 		return tree.size
+	})
+	benchTreeMultiSetReadOnly(() => {
+		const set = new TreeMultiSet<number>()
+		for (const val of list) set.add(val)
+		return set.size
 	})
 	benchFunctionalRedBlackTree(() => {
 		let tree = createRBTree<number, undefined>()
@@ -81,6 +92,11 @@ for (const [description, values] of Object.entries({
 	benchSplay(tree => {
 		for (const val of values) tree.insert(val)
 		return tree.size
+	})
+
+	benchTreeMultiSet(set => {
+		for (const val of values) set.add(val)
+		return set.size
 	})
 
 	benchFunctionalRedBlackTree(tree => {
@@ -116,6 +132,11 @@ for (const [description, values] of Object.entries({
 		return tree.size
 	})
 
+	benchTreeMultiSet(set => {
+		for (const val of values) set.delete(val)
+		return set.size
+	})
+
 	benchFunctionalRedBlackTree(tree => {
 		for (const val of values) tree = tree.remove(val)
 		return tree.length
@@ -141,9 +162,18 @@ describe('pop 1000 times', () => {
 	benchSplay(tree => {
 		for (let i = 0; i < 1000; i++) {
 			const max = tree.max()
-			if (max) tree.remove(max)
+			if (max !== null) tree.remove(max)
 		}
 		return tree.size
+	})
+
+	benchTreeMultiSet(set => {
+		for (let i = 0; i < 1000; i++) {
+			// The type is wrong (does not include undefined)!
+			const max = set.last()
+			if (max !== undefined) set.delete(max)
+		}
+		return set.size
 	})
 
 	benchFunctionalRedBlackTree(tree => {
@@ -174,6 +204,12 @@ describe('iterate over all elements', () => {
 	benchSplayReadOnly(tree => {
 		let sum = 0
 		for (const { key } of tree) sum += key
+		return sum
+	})
+
+	benchTreeMultiSetReadOnly(set => {
+		let sum = 0
+		for (const x of set) sum += x
 		return sum
 	})
 
@@ -208,6 +244,15 @@ describe('iterate over elements between 499500 and 500500', () => {
 	benchSplayReadOnly(tree => {
 		let sum = 0
 		tree.range(499500, 500500, ({ key }) => { sum += key })
+		return sum
+	})
+
+	benchTreeMultiSetReadOnly(set => {
+		let sum = 0
+		const end = set.upperBound(500500)
+		for (const it = set.lowerBound(499500); !it.equals(end); it.next()) {
+			sum += it.key
+		}
 		return sum
 	})
 
@@ -266,7 +311,7 @@ describe('index from 499500th to 500500th', () => {
 	})
 })
 
-describe('test for 2000 elements where about half are nonexistent', () => {
+describe('test for 2000 elements about half of which are nonexistent', () => {
 	const values = Array.from({ length: 2000 }, (_, i) => list[i * 100] + +(random() < .5))
 
 	benchSortedArrayReadOnly(slt => {
@@ -290,6 +335,12 @@ describe('test for 2000 elements where about half are nonexistent', () => {
 	benchSplayReadOnly(tree => {
 		let sum = 0
 		for (const val of values) if (tree.contains(val)) sum++
+		return sum
+	})
+
+	benchTreeMultiSetReadOnly(set => {
+		let sum = 0
+		for (const val of values) if (set.has(val)) sum++
 		return sum
 	})
 
@@ -324,7 +375,7 @@ describe('count 1000 existing elements', () => {
 	})
 })
 
-describe('indexOf 2000 elements where about half are nonexistent with checks', () => {
+describe('indexOf 2000 elements about half of which are nonexistent with checks', () => {
 	const values = Array.from({ length: 2000 }, (_, i) => list[i * 100] + +(random() < .5))
 
 	benchSortedArrayReadOnly(slt => {
@@ -360,5 +411,6 @@ describe('convert to Array', () => {
 	benchArrayReadOnly(arr => arr.slice().length)
 	benchAVLReadOnly(tree => tree.keys().length)
 	benchSplayReadOnly(tree => tree.keys().length)
+	benchTreeMultiSetReadOnly(set => Array.from(set).length)
 	benchFunctionalRedBlackTree(tree => tree.keys.length)
 })

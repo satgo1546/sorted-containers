@@ -11,9 +11,6 @@ importers:
       '@types/bintrees':
         specifier: ^1.0.6
         version: 1.0.6
-      '@types/collections':
-        specifier: ^5.1.5
-        version: 5.1.5
       '@types/functional-red-black-tree':
         specifier: ^1.0.6
         version: 1.0.6
@@ -382,9 +379,6 @@ packages:
 
   '@types/bintrees@1.0.6':
     resolution: {integrity: sha512-pZWT4Bz+tWwxlDspSjdoIza4PE5lbGI4Xvs3FZV/2v5m5SDA8LwNpU8AXxlndmARO7OaQ1Vf3zFenOsNMzaRkQ==}
-
-  '@types/collections@5.1.5':
-    resolution: {integrity: sha512-gLSFHjr7XTZJ6VQnD0Gn0NfhV/B0rhyWvFokV4iT0++2ccLeMTdxO9y9joVFYYMdn0BT24rkkjM8HLW5gSGh5g==}
 
   '@types/estree@1.0.6':
     resolution: {integrity: sha512-AYnb1nQyY49te+VRAVgmzfcgjYS91mY5P0TKUDCLEM+gNnA+3T6rWITXRLYCpahpqSQbN5cE+gHpnPyXjHWxcw==}
@@ -1225,8 +1219,6 @@ snapshots:
   '@shikijs/vscode-textmate@10.0.2': {}
 
   '@types/bintrees@1.0.6': {}
-
-  '@types/collections@5.1.5': {}
 
   '@types/estree@1.0.6': {}
 

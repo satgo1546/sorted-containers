@@ -3,9 +3,11 @@ import seedrandom from 'seedrandom'
 import { SortedArray } from './sorted-array.ts'
 import { AVLTree } from 'avl'
 import SplayTree from 'splaytree'
-import { bisectLeft, bisectRight, insort } from './bisect.ts'
+import { bisectLeft, bisectRight } from './bisect.ts'
 import { RBTree } from 'bintrees'
 import { TreeSet } from 'jstreemap'
+import { OrderedSet } from 'js-sdsl'
+import SortedSet from 'collections/sorted-set.js'
 
 let random = seedrandom('')
 const [stockArray, benchArrayReadOnly, benchArray] = makeStockAndBench('Array', () => Array.from({ length: 1000000 }, (_, i) => i * 2))
@@ -43,6 +45,16 @@ const [, benchTreeSetReadOnly, benchTreeSet] = makeStockAndBench('jstreemap Tree
 	for (const val of list) set.add(val)
 	return set
 })
+const [, benchOrderedSetReadOnly, benchOrderedSet] = makeStockAndBench('js-sdsl OrderedSet', () => {
+	let set = new OrderedSet<number>(undefined, undefined, true)
+	for (const val of list) set.insert(val)
+	return set
+})
+const [, benchCollectionsSortedSetReadOnly, benchCollectionsSortedSet] = makeStockAndBench('collections.js SortedSet', () => {
+	let set = new SortedSet()
+	for (const val of list) set.push(val)
+	return set
+})
 
 describe('initialize with 1,000,000 elements', () => {
 	benchSortedArrayReadOnly(() => new SortedArray(list).length)
@@ -68,6 +80,13 @@ describe('initialize with 1,000,000 elements', () => {
 		for (const val of list) tree.insert(val)
 		return tree.size
 	})
+	benchTreeSetReadOnly(() => {
+		let set = new TreeSet<number>()
+		for (const val of list) set.add(val)
+		return set.size
+	})
+	benchOrderedSetReadOnly(() => new OrderedSet<number>(list, undefined, true).length)
+	benchCollectionsSortedSetReadOnly(() => new SortedSet(list).length)
 })
 
 for (const [description, values] of Object.entries({
@@ -81,7 +100,10 @@ for (const [description, values] of Object.entries({
 	})
 
 	benchArray(arr => {
-		for (const val of values) insort(arr, val, (a, b) => a - b)
+		for (const val of values) {
+			const i = bisectLeft(arr, val, (a, b) => a - b)
+			if (arr[i] !== val) arr.splice(i, 0, val)
+		}
 		return arr.length
 	})
 
@@ -98,6 +120,21 @@ for (const [description, values] of Object.entries({
 	benchRBTree(tree => {
 		for (const val of values) tree.insert(val)
 		return tree.size
+	})
+
+	benchTreeSet(set => {
+		for (const val of values) set.add(val)
+		return set.size
+	})
+
+	benchOrderedSet(set => {
+		for (const val of values) set.insert(val)
+		return set.length
+	})
+
+	benchCollectionsSortedSet(set => {
+		for (const val of values) set.push(val)
+		return set.length
 	})
 })
 
@@ -132,6 +169,21 @@ for (const [description, values] of Object.entries({
 		for (const val of values) tree.remove(val)
 		return tree.size
 	})
+
+	benchTreeSet(set => {
+		for (const val of values) set.delete(val)
+		return set.size
+	})
+
+	benchOrderedSet(set => {
+		for (const val of values) set.eraseElementByKey(val)
+		return set.length
+	})
+
+	benchCollectionsSortedSet(set => {
+		for (const val of values) set.delete(val)
+		return set.length
+	})
 })
 
 describe('pop 1000 times', () => {
@@ -165,6 +217,22 @@ describe('pop 1000 times', () => {
 		}
 		return tree.size
 	})
+
+	benchTreeSet(set => {
+		for (let i = 0; i < 1000; i++) set.delete(set.last())
+		return set.size
+	})
+
+	benchOrderedSet(set => {
+		const it = set.rBegin()
+		for (let i = 0; i < 1000; i++) set.eraseElementByIterator(it)
+		return set.length
+	})
+
+	benchCollectionsSortedSet(set => {
+		for (let i = 0; i < 1000; i++) set.pop()
+		return set.length
+	})
 })
 
 describe('iterate over all elements', () => {
@@ -195,6 +263,25 @@ describe('iterate over all elements', () => {
 	benchRBTreeReadOnly(tree => {
 		let sum = 0
 		tree.each(x => sum += x)
+		return sum
+	})
+
+	benchTreeSetReadOnly(set => {
+		let sum = 0
+		for (const x of set) sum += x
+		return sum
+	})
+
+	benchOrderedSetReadOnly(set => {
+		let sum = 0
+		for (const x of set) sum += x
+		return sum
+	})
+
+	benchCollectionsSortedSetReadOnly(set => {
+		let sum = 0
+		// @ts-ignore
+		set.forEach(x => sum += x)
 		return sum
 	})
 })
@@ -234,9 +321,27 @@ describe('iterate over elements between 499500 and 500500', () => {
 		}
 		return sum
 	})
+
+	benchTreeSetReadOnly(set => {
+		let sum = 0
+		const end = set.upperBound(500500)
+		for (const it = set.lowerBound(499500); !it.equals(end); it.next()) {
+			sum += it.key
+		}
+		return sum
+	})
+
+	benchOrderedSetReadOnly(set => {
+		let sum = 0
+		const end = set.upperBound(500500)
+		for (const it = set.lowerBound(499500); !it.equals(end); it.next()) {
+			sum += it.pointer
+		}
+		return sum
+	})
 })
 
-describe('test for 2000 elements where about half are nonexistent', () => {
+describe('test for 2000 elements about half of which are nonexistent', () => {
 	const values = Array.from({ length: 2000 }, (_, i) => list[i * 100] + +(random() < .5))
 
 	benchSortedArrayReadOnly(slt => {
@@ -268,6 +373,24 @@ describe('test for 2000 elements where about half are nonexistent', () => {
 		for (const val of values) if (tree.find(val) !== null) sum++
 		return sum
 	})
+
+	benchTreeSetReadOnly(set => {
+		let sum = 0
+		for (const val of values) if (set.has(val)) sum++
+		return sum
+	})
+
+	benchOrderedSetReadOnly(set => {
+		let sum = 0
+		for (const val of values) if (!set.find(val).equals(set.end())) sum++
+		return sum
+	})
+
+	benchCollectionsSortedSetReadOnly(set => {
+		let sum = 0
+		for (const val of values) if (set.has(val)) sum++
+		return sum
+	})
 })
 
 describe('convert to Array', () => {
@@ -280,4 +403,8 @@ describe('convert to Array', () => {
 		tree.each(val => arr.push(val))
 		return arr.length
 	})
+	benchTreeSetReadOnly(set => Array.from(set).length)
+	benchOrderedSetReadOnly(set => Array.from(set).length)
+	// @ts-ignore
+	benchCollectionsSortedSetReadOnly(set => set.toArray().length)
 })

@@ -5,7 +5,9 @@
 	"main": "dist/index.js",
 	"module": "dist/index.mjs",
 	"types": "dist/index.d.ts",
-	"files": ["dist"],
+	"files": [
+		"dist"
+	],
 	"scripts": {
 		"prepare": "tsup",
 		"test": "vitest run"
@@ -42,7 +44,6 @@
 	"homepage": "https://satgo1546.github.io/sorted-containers/",
 	"devDependencies": {
 		"@types/bintrees": "^1.0.6",
-		"@types/collections": "^5.1.5",
 		"@types/functional-red-black-tree": "^1.0.6",
 		"@types/seedrandom": "^3.0.8",
 		"@vitest/coverage-v8": "3.0.7",
