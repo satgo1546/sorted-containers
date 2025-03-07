@@ -5,4 +5,10 @@
 	"entryPoints": ["src/index.ts"],
 	"sortEntryPoints": false,
 	"alwaysCreateEntryPointModule": false,
+	"projectDocuments": [
+		"docs/introduction.md",
+		"docs/comparator.md",
+		"docs/performance.md",
+		"docs/notes.md",
+	],
 }
