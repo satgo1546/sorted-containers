@@ -7,6 +7,9 @@ const defaultComparator = <T>(a: T, b: T): number => {
 	return 0
 }
 
+// Iterator() constructor are only available since Oct 2024.
+const IteratorPrototype = Object.getPrototypeOf([][Symbol.iterator]())
+
 /**
  * Sorted array is a sorted mutable collection.
  *
@@ -681,7 +684,7 @@ export class SortedArray<T> {
 			let idx = maxIdx
 			return {
 				// @ts-ignore
-				__proto__: Iterator.prototype,
+				__proto__: IteratorPrototype,
 				next: () => {
 					if (pos < minPos || pos === minPos && idx <= minIdx) {
 						return { value: undefined, done: true }
@@ -699,7 +702,7 @@ export class SortedArray<T> {
 			let idx = minIdx
 			return {
 				// @ts-ignore
-				__proto__: Iterator.prototype,
+				__proto__: IteratorPrototype,
 				next: () => {
 					if (pos > maxPos || pos === maxPos && idx >= maxIdx) {
 						return { value: undefined, done: true }
