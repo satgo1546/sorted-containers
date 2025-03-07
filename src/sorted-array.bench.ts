@@ -1,25 +1,10 @@
-import { Bench } from 'tinybench'
+import { describe, makeStockAndBench } from './benchmark-utils.ts'
 import seedrandom from 'seedrandom'
 import { SortedArray } from './sorted-array.ts'
 import { AVLTree } from 'avl'
 import SplayTree from 'splaytree'
 import createRBTree from 'functional-red-black-tree'
 import { bisectLeft, bisectRight, insort } from './bisect.ts'
-
-let bench: Bench
-function describe(name: string, fn: () => void) {
-	console.log(name)
-	bench = new Bench({
-		name,
-		iterations: 10,
-		time: 0,
-		warmupIterations: 3,
-		warmupTime: 0,
-	})
-	fn()
-	bench.runSync()
-	console.table(bench.table(), ['Task name', 'Latency avg (ns)', 'Throughput avg (ops/s)', 'Samples'])
-}
 
 let random = seedrandom('')
 const [stockArray, benchArrayReadOnly, benchArray] = makeStockAndBench('Array', () => Array.from({ length: 1000000 }, (_, i) => i * 2))
@@ -29,22 +14,6 @@ for (let i = list.length - 1; i; i--) {
 	const tmp = list[i]
 	list[i] = list[j]
 	list[j] = tmp
-}
-
-function makeStockAndBench<T>(name: string, factory: () => T): [T, (fn: (x: T) => void) => void, (fn: (x: T) => void) => void] {
-	const stock = factory()
-	return [stock, fn => {
-		bench.add(name, () => fn(stock))
-		console.log(fn(stock), name)
-	}, fn => {
-		let x: T
-		bench.add(name, () => fn(x), {
-			beforeEach() {
-				x = factory()
-			},
-		})
-		console.log(fn(factory()), name)
-	}]
 }
 
 const [, benchSortedArrayReadOnly, benchSortedArray] = makeStockAndBench('SortedArray', () => {
@@ -68,16 +37,6 @@ const [, benchFunctionalRedBlackTree] = makeStockAndBench('functional-red-black-
 	for (const val of list) tree = tree.insert(val, undefined)
 	return tree
 })
-
-// function benchRBTree(fn: (tree: RBTree<number>) => void) {
-// 	let tree: RBTree<number>
-// 	bench('bintrees RBTree', () => fn(tree), {
-// 		setup() {
-// 			tree = new RBTree((a, b) => a - b)
-// 			for (const val of list) tree.insert(val)
-// 		},
-// 	})
-// }
 
 describe('initialize with 1,000,000 elements', () => {
 	benchSortedArrayReadOnly(() => new SortedArray(list).length)

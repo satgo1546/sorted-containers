@@ -4,6 +4,7 @@
 		"**/*.spec.ts",
 		"**/*.test.ts",
 		"**/*.bench.ts",
+		"src/benchmark-utils.ts",
 	],
 	"compilerOptions": {
 		"target": "ESNext",
