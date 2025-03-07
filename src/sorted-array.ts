@@ -11,12 +11,12 @@ const defaultComparator = <T>(a: T, b: T): number => {
 const IteratorPrototype = Object.getPrototypeOf([][Symbol.iterator]())
 
 /**
- * Sorted array is a sorted mutable collection.
+ * SortedArray is a sorted mutable collection.
  *
- * Sorted array values are maintained in sorted order.
+ * SortedArray values are maintained in sorted order.
  *
- * Sorted array values must have a total ordering.
- * The total ordering of values must not change while they are stored in the sorted array.
+ * SortedArray values must have a total ordering.
+ * The total ordering of values must not change while they are stored in the SortedArray.
  *
  * Methods for adding values:
  *
@@ -54,6 +54,8 @@ const IteratorPrototype = Object.getPrototypeOf([][Symbol.iterator]())
  * - {@link SortedArray#length}
  * - {@link SortedArray#toJSON}
  * - {@link SortedArray#toString}
+ * 
+ * @typeParam T - The element type.
  */
 export class SortedArray<T> {
 	static readonly DEFAULT_LOAD_FACTOR = 1000
@@ -67,9 +69,9 @@ export class SortedArray<T> {
 	private _offset = 0
 
 	/**
-	 * Initialize sorted array instance.
+	 * Initialize SortedArray instance.
 	 *
-	 * Optional `iterable` argument provides an initial iterable of values to initialize the sorted array.
+	 * Optional `iterable` argument provides an initial iterable of values to initialize the SortedArray.
 	 *
 	 * @param iterable - Initial values (optional).
 	 *
@@ -85,7 +87,7 @@ export class SortedArray<T> {
 	 * These operators violate transitivity if the inputs have mixed types or include NaN.
 	 * 【TODO: add link to docs explaining】
 	 *
-	 * @param options.loadFactor - Specifies the load-factor for sorted array sublists.
+	 * @param options.loadFactor - Specifies the load-factor for SortedArray sublists.
 	 * The default load factor of 1000 works well for lists from tens to tens-of-millions of values.
 	 * Good practice is to use a value that is the cube root of the list size.
 	 * With billions of elements, the best load factor depends on your usage.
@@ -106,7 +108,7 @@ export class SortedArray<T> {
 	}
 
 	/**
-	 * Remove all values from sorted array.
+	 * Remove all values from SortedArray.
 	 */
 	clear(): void {
 		this._len = 0
@@ -117,7 +119,7 @@ export class SortedArray<T> {
 	}
 
 	/**
-	 * Add `value` to sorted array.
+	 * Add `value` to SortedArray.
 	 *
 	 * @example
 	 * const sl = new SortedArray();
@@ -126,7 +128,7 @@ export class SortedArray<T> {
 	 * sl.add(2);
 	 * sl // SortedArray [1, 2, 3]
 	 *
-	 * @param value - Value to add to sorted array.
+	 * @param value - Value to add to SortedArray.
 	 */
 	add(value: T): void {
 		if (this._maxes.length) {
@@ -179,7 +181,7 @@ export class SortedArray<T> {
 	}
 
 	/**
-	 * Update sorted array by adding all values from `iterable`.
+	 * Update SortedArray by adding all values from `iterable`.
 	 *
 	 * @example
 	 * const sl = new SortedArray();
@@ -214,14 +216,14 @@ export class SortedArray<T> {
 	}
 
 	/**
-	 * Return true if `value` is an element of the sorted array.
+	 * Return true if `value` is an element of the SortedArray.
 	 *
 	 * @example
 	 * const sl = new SortedArray([1, 2, 3, 4, 5]);
 	 * sl.includes(3) // true
 	 *
-	 * @param value - Search for value in sorted array.
-	 * @returns - True if `value` in sorted array.
+	 * @param value - Search for value in SortedArray.
+	 * @returns True if `value` in SortedArray.
 	 */
 	includes(value: T): boolean {
 		if (!this._maxes.length) return false
@@ -234,7 +236,7 @@ export class SortedArray<T> {
 	}
 
 	/**
-	 * Remove one `value` from sorted array if it is a member.
+	 * Remove one `value` from SortedArray if it is a member.
 	 *
 	 * If `value` is not a member, do nothing.
 	 *
@@ -243,8 +245,8 @@ export class SortedArray<T> {
 	 * sl.delete(5)
 	 * sl.delete(0)
 	 * Array.from(sl) // [1, 2, 3, 4]
-	 * @param value - Value to discard from sorted array.
-	 * @returns Returns true if an element in the sorted array existed and has been removed, or false if the element does not exist.
+	 * @param value - Value to discard from SortedArray.
+	 * @returns Returns true if an element in the SortedArray existed and has been removed, or false if the element does not exist.
 	 */
 	delete(value: T): boolean {
 		if (!this._maxes.length) return false
@@ -311,7 +313,7 @@ export class SortedArray<T> {
 	}
 
 	/**
-	 * Convert an index pair (lists index, sublist index) into a single index number that corresponds to the position of the value in the sorted array.
+	 * Convert an index pair (lists index, sublist index) into a single index number that corresponds to the position of the value in the SortedArray.
 	 *
 	 * Many queries require the index be built.
 	 * Details of the index are described in {@link _build_index}.
@@ -327,7 +329,7 @@ export class SortedArray<T> {
 	 *
 	 * @param pos - Lists index.
 	 * @param idx - Sublist index.
-	 * @returns - Index in sorted array.
+	 * @returns Index in SortedArray.
 	 */
 	private _loc(pos: number, idx: number): number {
 		if (pos === 0) return idx
@@ -364,8 +366,8 @@ export class SortedArray<T> {
 	 *
 	 * At a child node, the indexing pair is computed from the relative position of the child node as compared with the offset and the remaining index.
 	 *
-	 * @param idx - Index in sorted array.
-	 * @returns - (lists index, sublist index) pair.
+	 * @param idx - Index in SortedArray.
+	 * @returns (lists index, sublist index) pair.
 	 */
 	private _pos(idx: number): [number, number] {
 		if (idx < 0) {
@@ -413,7 +415,7 @@ export class SortedArray<T> {
 	}
 
 	/**
-	 * Build a positional index for indexing the sorted array.
+	 * Build a positional index for indexing the SortedArray.
 	 *
 	 * Indexes are represented as binary trees in a dense array notation similar to a binary heap.
 	 *
@@ -461,7 +463,7 @@ export class SortedArray<T> {
 	}
 
 	/**
-	 * Remove value at `index` from sorted array.
+	 * Remove value at `index` from SortedArray.
 	 *
 	 * If `index` is out of range, does nothing.
 	 *
@@ -479,7 +481,7 @@ export class SortedArray<T> {
 	}
 
 	/**
-	 * Removes elements from sorted array by index.
+	 * Removes elements from SortedArray by index.
 	 *
 	 * @example
 	 * const sl = new SortedArray('abcde');
@@ -518,7 +520,7 @@ export class SortedArray<T> {
 	}
 
 	/**
-	 * Returns a copy of a section of sorted array as an ordinary Array.
+	 * Returns a copy of a section of SortedArray as an ordinary Array.
 	 *
 	 * For both start and end, a negative index can be used to indicate an offset from the end of the array.
 	 *
@@ -564,7 +566,7 @@ export class SortedArray<T> {
 	}
 
 	/**
-	 * Lookup value at `index` in sorted array.
+	 * Lookup value at `index` in SortedArray.
 	 *
 	 * If `index` is out of range, returns `undefined`.
 	 *
@@ -603,7 +605,7 @@ export class SortedArray<T> {
 	}
 
 	/**
-	 * Return an iterator over the sorted array.
+	 * Return an iterator over the SortedArray.
 	 *
 	 * Iterating a SortedArray while adding or deleting elements may throw an error or silently fail to iterate over all elements.
 	 */
@@ -625,13 +627,13 @@ export class SortedArray<T> {
 	}
 
 	/**
-	 * Return an iterator that slices sorted array from `start` to `stop`.
+	 * Return an iterator that slices SortedArray from `start` to `stop`.
 	 *
 	 * The `start` and `stop` index are treated inclusive and exclusive, respectively.
 	 *
 	 * A negative index will count back from the last item.
 	 *
-	 * Both `start` and `stop` default to `undefined` which is automatically inclusive of the beginning and end of the sorted array.
+	 * Both `start` and `stop` default to `undefined` which is automatically inclusive of the beginning and end of the SortedArray.
 	 *
 	 * When `reverse` is `true` the values are yielded from the iterator in reverse order; `reverse` defaults to `false`.
 	 *
@@ -643,9 +645,9 @@ export class SortedArray<T> {
 	 * Array.from(it) // ['c', 'd', 'e', 'f']
 	 *
 	 * @param start - Start index (inclusive).
-	 * @param stop - Stop index (exclusive).
+	 * @param end - Stop index (exclusive).
 	 * @param reverse - Yield values in reverse order.
-	 * @returns - Iterator.
+	 * @returns Iterator.
 	 */
 	islice(start = 0, end = this._len, reverse = false): IterableIterator<T> {
 		if (!this._len) return [][Symbol.iterator]()
@@ -670,7 +672,7 @@ export class SortedArray<T> {
 	}
 
 	/**
-	 * Return an iterator that slices sorted array using two index pairs.
+	 * Return an iterator that slices SortedArray using two index pairs.
 	 *
 	 * The index pairs are (min_pos, min_idx) and (max_pos, max_idx), the first inclusive and the latter exclusive.
 	 * See {@link _pos} for details on how an index is converted to an index pair.
@@ -721,7 +723,7 @@ export class SortedArray<T> {
 	/**
 	 * Create an iterator of values between `minimum` and `maximum`.
 	 *
-	 * Both `minimum` and `maximum` default to `undefined` which is automatically inclusive of the beginning and end of the sorted array.
+	 * Both `minimum` and `maximum` default to `undefined` which is automatically inclusive of the beginning and end of the SortedArray.
 	 *
 	 * The argument `includeMinimum` and `includeMaximum` is a pair of booleans that indicates whether the minimum and maximum ought to be included in the range, respectively.
 	 * Both arguments default to `true` such that the range is inclusive of both minimum and maximum.
@@ -740,11 +742,13 @@ export class SortedArray<T> {
 	 * @param includeMinimum - Whether the minimum ought to be included in the range.
 	 * @param includeMaximum - Whether the maximum ought to be included in the range.
 	 * @param reverse - Yield values in reverse order.
-	 * @returns - Iterator.
+	 * @returns Iterator.
 	 */
 	irange(minimum?: T, maximum?: T, includeMinimum = true, includeMaximum = true, reverse = false): IterableIterator<T> {
 		if (!this._maxes.length) return [][Symbol.iterator]()
 
+		// Calculate the minimum (pos, idx) pair.
+		// By default this location will be inclusive in our calculation.
 		let minPos: number, minIdx: number
 		if (minimum === undefined) {
 			minPos = 0
@@ -761,6 +765,8 @@ export class SortedArray<T> {
 			}
 		}
 
+		// Calculate the maximum (pos, idx) pair.
+		// By default this location will be exclusive in our calculation.
 		let maxPos: number, maxIdx: number
 		if (maximum === undefined) {
 			maxPos = this._maxes.length - 1
@@ -789,14 +795,14 @@ export class SortedArray<T> {
 	}
 
 	/**
-	 * The size of the sorted array.
+	 * The size of the SortedArray.
 	 */
 	get length(): number {
 		return this._len
 	}
 
 	/**
-	 * Return an index to insert `value` in the sorted array.
+	 * Return an index to insert `value` in the SortedArray.
 	 *
 	 * If the `value` is already present, the insertion point will be before (to the left of) any existing values.
 	 *
@@ -804,8 +810,8 @@ export class SortedArray<T> {
 	 * const sl = new SortedArray([10, 11, 12, 13, 14]);
 	 * sl.bisect_left(12) // 2
 	 *
-	 * @param value - Insertion index of value in sorted array.
-	 * @returns - Index.
+	 * @param value - Insertion index of value in SortedArray.
+	 * @returns Index.
 	 */
 	bisectLeft(value: T): number {
 		if (!this._maxes.length) return 0
@@ -816,7 +822,7 @@ export class SortedArray<T> {
 	}
 
 	/**
-	 * Return an index to insert `value` in the sorted array.
+	 * Return an index to insert `value` in the SortedArray.
 	 *
 	 * Similar to {@link bisectLeft}, but if `value` is already present, the insertion point will be after (to the right of) any existing values.
 	 *
@@ -824,8 +830,8 @@ export class SortedArray<T> {
 	 * const sl = new SortedArray([10, 11, 12, 13, 14]);
 	 * sl.bisect_right(12) // 3
 	 *
-	 * @param value - Insertion index of value in sorted array.
-	 * @returns - Index.
+	 * @param value - Insertion index of value in SortedArray.
+	 * @returns Index.
 	 */
 	bisectRight(value: T): number {
 		if (!this._maxes.length) return 0
@@ -836,14 +842,14 @@ export class SortedArray<T> {
 	}
 
 	/**
-	 * Return number of occurrences of `value` in the sorted array.
+	 * Return number of occurrences of `value` in the SortedArray.
 	 *
 	 * @example
 	 * const sl = new SortedArray([1, 2, 2, 3, 3, 3, 4, 4, 4, 4]);
 	 * sl.count(3) // 3
 	 *
-	 * @param value - Value to count in sorted array.
-	 * @returns - Count.
+	 * @param value - Value to count in SortedArray.
+	 * @returns Count.
 	 */
 	count(value: T): number {
 		if (!this._maxes.length) return 0
@@ -870,7 +876,7 @@ export class SortedArray<T> {
 	/**
 	 * Return a shallow copy of the SortedArray.
 	 *
-	 * @returns - A new SortedArray.
+	 * @returns A new SortedArray.
 	 */
 	clone(): SortedArray<T> {
 		return {
@@ -883,9 +889,9 @@ export class SortedArray<T> {
 	}
 
 	/**
-	 * Remove and return value at `index` in sorted array.
+	 * Remove and return value at `index` in SortedArray.
 	 *
-	 * If the sorted array is empty or index is out of range, `undefined` is returned and the sorted array is not modified.
+	 * If the SortedArray is empty or index is out of range, `undefined` is returned and the SortedArray is not modified.
 	 *
 	 * Negative indices count back from the last item.
 	 *
@@ -896,7 +902,7 @@ export class SortedArray<T> {
 	 * sl // SortedArray ['a', 'b', 'd']
 	 *
 	 * @param index - Index of value (default -1).
-	 * @returns - Value.
+	 * @returns Value or `undefined`.
 	 */
 	pop(index = -1): T | undefined {
 		if (!this._len) return
@@ -940,7 +946,7 @@ export class SortedArray<T> {
 	}
 
 	/**
-	 * Return first index of `value` in sorted array, or -1 if `value` is not present.
+	 * Return first index of `value` in SortedArray, or -1 if `value` is not present.
 	 *
 	 * Index must be between `start` and `end` for the `value` to be considered present.
 	 * Negative indices count back from the last item.
@@ -950,10 +956,10 @@ export class SortedArray<T> {
 	 * sl.indexOf('d') // 3
 	 * sl.indexOf('z') // -1
 	 *
-	 * @param value - Value in sorted array.
+	 * @param value - Value in SortedArray.
 	 * @param start - The array index at which to start the search. If omitted, defaults to 0.
-	 * @param end - The array index at which to end the search. If omitted, defaults to the end of the sorted array.
-	 * @returns - The index of the first occurrence of `value` in the sorted array, or -1 if it is not present.
+	 * @param end - The array index at which to end the search. If omitted, defaults to the end of the SortedArray.
+	 * @returns The index of the first occurrence of `value` in the SortedArray, or -1 if it is not present.
 	 */
 	indexOf(value: T, start = 0, end = this._len): number {
 		if (!this._len) return -1
@@ -989,7 +995,7 @@ export class SortedArray<T> {
 	}
 
 	/**
-	 * Return new sorted array containing all values in both sequences.
+	 * Return new SortedArray containing all values in both sequences.
 	 *
 	 * Values in `other` do not need to be in sorted order.
 	 *
@@ -999,21 +1005,21 @@ export class SortedArray<T> {
 	 * sl1.concat(sl2) // SortedArray ['a', 'a', 'b', 'c', 't', 't']
 	 *
 	 * @param other - Other iterable.
-	 * @returns - New sorted array.
+	 * @returns New SortedArray.
 	 */
 	concat(other: Iterable<T>): SortedArray<T> {
 		return new SortedArray([...this._lists.flat(), ...other], { comparator: this._cmp })
 	}
 
 	/**
-	 * Return sorted array as an ordinary Array.
+	 * Return SortedArray as an ordinary Array.
 	 */
 	toJSON(): T[] {
 		return this._lists.flat()
 	}
 
 	/**
-	 * Return a string representation of sorted array.
+	 * Return a string representation of SortedArray.
 	 */
 	toString(): string {
 		return this._lists.toString()
@@ -1021,7 +1027,7 @@ export class SortedArray<T> {
 }
 
 /**
- * Check invariants of sorted array.
+ * Check invariants of SortedArray.
  *
  * This is a function instead of a method so that it can be tree-shaken.
  */
