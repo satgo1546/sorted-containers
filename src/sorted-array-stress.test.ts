@@ -180,7 +180,7 @@ const actions = {
 		expect(slt.length).not.toBe(0)
 	},
 }
-const actionNames = Object.keys(actions)
+const actionValues = Object.values(actions)
 
 function testStress(repeat: number) {
 	const slt = new SortedArray(
@@ -189,7 +189,7 @@ function testStress(repeat: number) {
 	)
 
 	for (let rpt = 0; rpt < repeat; rpt++) {
-		const action = actions[actionNames[Math.floor(random() * actionNames.length)]]
+		const action = actionValues[Math.floor(random() * actionValues.length)]
 		action(slt)
 
 		checkSortedArray(slt)

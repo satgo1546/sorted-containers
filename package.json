@@ -2,10 +2,13 @@
 	"name": "sorted-containers",
 	"version": "0.1.0",
 	"description": "Sorted Containers — Sorted Array, Sorted Map, Sorted Set",
-	"main": "index.ts",
-	"type": "module",
+	"main": "dist/index.js",
+	"module": "dist/index.mjs",
+	"types": "dist/index.d.ts",
+	"files": ["dist"],
 	"scripts": {
-		"test": "vitest"
+		"prepare": "tsup",
+		"test": "vitest run"
 	},
 	"keywords": [
 		"sorted",
@@ -29,6 +32,13 @@
 		"url": "https://satgo1546.github.io/"
 	},
 	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/satgo1546/sorted-containers"
+	},
+	"bugs": {
+		"url": "https://github.com/satgo1546/sorted-containers/issues"
+	},
 	"homepage": "https://satgo1546.github.io/sorted-containers/",
 	"devDependencies": {
 		"@types/bintrees": "^1.0.6",
@@ -46,6 +56,8 @@
 		"sorted-btree": "^1.8.1",
 		"splaytree": "^3.1.2",
 		"tinybench": "^3.1.1",
+		"tsup": "^8.4.0",
+		"typedoc": "^0.27.9",
 		"vite": "^6.2.0",
 		"vitest": "^3.0.7"
 	},

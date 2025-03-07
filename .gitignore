@@ -29,3 +29,9 @@ node_modules/
 
 # Output of 'npm pack'
 *.tgz
+
+# Bundled files
+dist/
+
+# Generated documentation
+_site/
