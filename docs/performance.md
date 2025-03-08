@@ -18,6 +18,12 @@ SortedArray:
 
 SortedSet:
 
+- **Array**:
+  Like the Array implementation of sorted array, but checks for duplicates at insertion time.
+- **Set**:
+  A naïve implementation backed by an ordinary Set.
+  Keys are sorted on demand.
+  Note that Set does not support custom comparators and is thus limited to primitive keys.
 - **[bintrees](https://www.npmjs.com/package/bintrees) RBTree**:
 - **[jstreemap](https://kirusi.github.io/jstreemap/) TreeSet**:
 - **[js-sdsl](https://js-sdsl.org/) OrderedSet**:

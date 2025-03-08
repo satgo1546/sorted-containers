@@ -18,6 +18,7 @@ for (let i = list.length - 1; i; i--) {
 	list[i] = list[j]
 	list[j] = tmp
 }
+const [, benchSetReadOnly, benchSet] = makeStockAndBench('Set', () => new Set(stockArray))
 
 const [, benchSortedArrayReadOnly, benchSortedArray] = makeStockAndBench('SortedSet', () => {
 	// Insert values one by one instead of `new SortedSet(list)` to align with other implementations.
@@ -65,6 +66,7 @@ describe('initialize with 1,000,000 elements', () => {
 		}
 		return arr.length
 	})
+	benchSetReadOnly(() => new Set(list).size)
 	benchAVLReadOnly(() => {
 		const tree = new AVLTree(undefined, true)
 		for (const val of list) tree.insert(val)
@@ -105,6 +107,11 @@ for (const [description, values] of Object.entries({
 			if (arr[i] !== val) arr.splice(i, 0, val)
 		}
 		return arr.length
+	})
+
+	benchSet(set => {
+		for (const val of values) set.add(val)
+		return set.size
 	})
 
 	benchAVL(tree => {
@@ -155,6 +162,11 @@ for (const [description, values] of Object.entries({
 		return arr.length
 	})
 
+	benchSet(set => {
+		for (const val of values) set.delete(val)
+		return set.size
+	})
+
 	benchAVL(tree => {
 		for (const val of values) tree.remove(val)
 		return tree.size
@@ -195,6 +207,17 @@ describe('pop 1000 times', () => {
 	benchArray(arr => {
 		for (let i = 0; i < 1000; i++) arr.pop()
 		return arr.length
+	})
+
+	benchSet(set => {
+		for (let i = 0; i < 1000; i++) {
+			if (set.size) {
+				let max = -Infinity
+				for (const x of set) max = Math.max(max, x)
+				set.delete(max)
+			}
+		}
+		return set.size
 	})
 
 	benchAVL(tree => {
@@ -248,6 +271,13 @@ describe('iterate over all elements', () => {
 		return sum
 	})
 
+	benchSetReadOnly(set => {
+		const arr = Array.from(set).sort((a, b) => a - b)
+		let sum = 0
+		for (const x of arr) sum += x
+		return sum
+	})
+
 	benchAVLReadOnly(tree => {
 		let sum = 0
 		tree.forEach(({ key }) => { sum += key })
@@ -294,6 +324,15 @@ describe('iterate over elements between 499500 and 500500', () => {
 	})
 
 	benchArrayReadOnly(arr => {
+		const l = bisectLeft(arr, 499500, (a, b) => a - b)
+		const r = bisectRight(arr, 500500, (a, b) => a - b)
+		let sum = 0
+		for (let i = l; i < r; i++) sum += arr[i]
+		return sum
+	})
+
+	benchSetReadOnly(set => {
+		const arr = Array.from(set).sort((a, b) => a - b)
 		const l = bisectLeft(arr, 499500, (a, b) => a - b)
 		const r = bisectRight(arr, 500500, (a, b) => a - b)
 		let sum = 0
@@ -356,6 +395,12 @@ describe('test for 2000 elements about half of which are nonexistent', () => {
 		return sum
 	})
 
+	benchSetReadOnly(set => {
+		let sum = 0
+		for (const val of values) if (set.has(val)) sum++
+		return sum
+	})
+
 	benchAVLReadOnly(tree => {
 		let sum = 0
 		for (const val of values) if (tree.contains(val)) sum++
@@ -396,6 +441,7 @@ describe('test for 2000 elements about half of which are nonexistent', () => {
 describe('convert to Array', () => {
 	benchSortedArrayReadOnly(slt => slt.slice().length)
 	benchArrayReadOnly(arr => arr.slice().length)
+	benchSetReadOnly(set => Array.from(set).sort((a, b) => a - b))
 	benchAVLReadOnly(tree => tree.keys().length)
 	benchSplayReadOnly(tree => tree.keys().length)
 	benchRBTreeReadOnly(tree => {
