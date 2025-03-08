@@ -1,1 +1,1 @@
-export { SortedArray } from './sorted-array.ts'
+export { SortedArray, checkSortedArray } from './sorted-array.ts'
