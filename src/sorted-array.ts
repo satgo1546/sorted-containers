@@ -1,14 +1,5 @@
 import { bisectLeft, bisectRight, insort } from './bisect.ts'
-
-const defaultComparator = <T>(a: T, b: T): number => {
-	if (a === b) return 0
-	if (a < b) return -1
-	if (a > b) return 1
-	return 0
-}
-
-// Iterator() constructor are only available since Oct 2024.
-const IteratorPrototype = Object.getPrototypeOf([][Symbol.iterator]())
+import { assert, defaultComparator, IteratorPrototype } from './common.ts'
 
 /**
  * SortedArray is a sorted mutable collection.
@@ -1118,7 +1109,3 @@ export const checkSortedArray = (<T>(self: {
 		throw e
 	}
 }) as unknown as <T>(self: SortedArray<T>) => void
-
-function assert(predicate: unknown): void {
-	if (!predicate) throw new Error('assertion failed')
-}
