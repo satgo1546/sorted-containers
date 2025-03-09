@@ -600,7 +600,7 @@ export class SortedArray<T> {
 	 *
 	 * Iterating a SortedArray while adding or deleting elements may throw an error or silently fail to iterate over all elements.
 	 */
-	[Symbol.iterator](): IterableIterator<T> {
+	[Symbol.iterator](): IteratorObject<T, undefined, unknown> {
 		if (!this._len) return [][Symbol.iterator]()
 		const maxPos = this._lists.length - 1
 		return this._islice(0, 0, maxPos, this._lists[maxPos].length, false)
@@ -611,7 +611,7 @@ export class SortedArray<T> {
 	 *
 	 * Iterating a SortedArray while adding or deleting elements may throw an error or silently fail to iterate over all elements.
 	 */
-	reversed(): IterableIterator<T> {
+	reversed(): IteratorObject<T, undefined, unknown> {
 		if (!this._len) return [][Symbol.iterator]()
 		const maxPos = this._lists.length - 1
 		return this._islice(0, 0, maxPos, this._lists[maxPos].length, true)
@@ -640,7 +640,7 @@ export class SortedArray<T> {
 	 * @param reverse - Yield values in reverse order.
 	 * @returns Iterator.
 	 */
-	islice(start = 0, end = this._len, reverse = false): IterableIterator<T> {
+	islice(start = 0, end = this._len, reverse = false): IteratorObject<T, undefined, unknown> {
 		if (!this._len) return [][Symbol.iterator]()
 
 		if (start < 0) start += this._len
@@ -670,13 +670,13 @@ export class SortedArray<T> {
 	 *
 	 * When `reverse` is `true`, values are yielded from the iterator in reverse order.
 	 */
-	private _islice(minPos: number, minIdx: number, maxPos: number, maxIdx: number, reverse: boolean): IterableIterator<T> {
+	private _islice(minPos: number, minIdx: number, maxPos: number, maxIdx: number, reverse: boolean): IteratorObject<T, undefined, unknown> {
 		// Rolling our own Iterator object in this case is both simpler and more performant than using a generator function.
 		if (reverse) {
 			let pos = maxPos
 			let idx = maxIdx
 			return {
-				// @ts-ignore
+				// @ts-expect-error
 				__proto__: IteratorPrototype,
 				next: () => {
 					if (pos < minPos || pos === minPos && idx <= minIdx) {
@@ -694,13 +694,13 @@ export class SortedArray<T> {
 			let pos = minPos
 			let idx = minIdx
 			return {
-				// @ts-ignore
+				// @ts-expect-error
 				__proto__: IteratorPrototype,
 				next: () => {
 					if (pos > maxPos || pos === maxPos && idx >= maxIdx) {
 						return { value: undefined, done: true }
 					}
-					const ret = { value: this._lists[pos][idx++], done: false }
+					const ret = { value: this._lists[pos][idx++], done: false as const }
 					if (idx >= this._lists[pos].length) {
 						pos++
 						idx = 0
@@ -735,7 +735,7 @@ export class SortedArray<T> {
 	 * @param reverse - Yield values in reverse order.
 	 * @returns Iterator.
 	 */
-	irange(minimum?: T, maximum?: T, includeMinimum = true, includeMaximum = true, reverse = false): IterableIterator<T> {
+	irange(minimum?: T, maximum?: T, includeMinimum = true, includeMaximum = true, reverse = false): IteratorObject<T, undefined, unknown> {
 		if (!this._maxes.length) return [][Symbol.iterator]()
 
 		// Calculate the minimum (pos, idx) pair.
