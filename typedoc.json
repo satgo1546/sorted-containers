@@ -11,4 +11,14 @@
 		"docs/performance.md",
 		"docs/notes.md",
 	],
+	"highlightLanguages": [
+		"bash",
+		"console",
+		"html",
+		"css",
+		"javascript",
+		"typescript",
+		"json",
+		"python",
+	],
 }
