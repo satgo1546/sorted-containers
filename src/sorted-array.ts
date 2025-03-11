@@ -109,6 +109,19 @@ export class SortedArray<T> extends AbstractSortedArray<T> {
 	}
 
 	/**
+	 * Executes a callback function once for each element in a SortedArray.
+	 * @param fn - The function to execute.
+	 * @param thisArg - An object to which the `this` keyword can refer in the callback function.
+	 * If thisArg is omitted, undefined is used.
+	 */
+	forEach(fn: (value: T, index: number, array: this) => void, thisArg?: any): void {
+		let idx = 0
+		for (const sublist of this._lists) {
+			for (const val of sublist) fn.call(thisArg, val, idx++, this)
+		}
+	}
+
+	/**
 	 * The size of the SortedArray.
 	 */
 	get length(): number {

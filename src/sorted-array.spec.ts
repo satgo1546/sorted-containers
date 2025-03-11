@@ -234,13 +234,25 @@ describe('SortedArray', () => {
 		expect(Array.from(slt)).toStrictEqual([...range(10), ...range(40, 100)])
 	})
 
+	test('forEach', () => {
+		let slt = new SortedArray(range(10000))
+		const arr: number[] = []
+		slt.forEach((x, i, a) => {
+			expect(typeof x).toBe('number')
+			expect(i).toBe(arr.length)
+			expect(a).toBe(slt)
+			arr.push(x)
+		})
+		expect(arr).toStrictEqual(Array.from(range(10000)))
+	})
+
 	test('iter', () => {
 		let slt = new SortedArray(range(10000))
 		const itr = slt[Symbol.iterator]()
 		expect(Array.from(itr)).toStrictEqual(Array.from(range(10000)))
 	})
 
-	test('iter', () => {
+	test('reversed', () => {
 		let slt = new SortedArray(range(10000))
 		const rev = slt.reversed()
 		expect(Array.from(rev)).toStrictEqual(Array.from(range(9999, -1, -1)))
@@ -779,6 +791,18 @@ describe('SortedArray modulo 10', () => {
 		slt.deleteSlice(10, 40)
 	})
 
+	test('forEach', () => {
+		let slt = new SortedArray(range(10000), { comparator: moduloComparator })
+		const arr: number[] = []
+		slt.forEach((x, i, a) => {
+			expect(typeof x).toBe('number')
+			expect(i).toBe(arr.length)
+			expect(a).toBe(slt)
+			arr.push(x)
+		})
+		expect(arr).toStrictEqual(Array.from(slt))
+	})
+
 	test('iterator', () => {
 		const slt = new SortedArray(range(10000), { comparator: moduloComparator })
 		const itr = slt[Symbol.iterator]()
@@ -1239,6 +1263,18 @@ describe('SortedArray negate', () => {
 		slt.deleteSlice(10, 40)
 		checkSortedArray(slt)
 		expect(Array.from(slt)).toStrictEqual([...range(99, 89, -1), ...range(59, -1, -1)])
+	})
+
+	test('forEach', () => {
+		let slt = new SortedArray(range(10000), { comparator: negateComparator })
+		const arr: number[] = []
+		slt.forEach((x, i, a) => {
+			expect(typeof x).toBe('number')
+			expect(i).toBe(arr.length)
+			expect(a).toBe(slt)
+			arr.push(x)
+		})
+		expect(arr).toStrictEqual(Array.from(slt))
 	})
 
 	test('iterator', () => {
