@@ -100,9 +100,10 @@ s.add(3);
 ```
 
 Set uses the same iteration order as Map, that is, the order of insertion.
-SortedSet in JavaScript tries to preserve the JavaScript Set semantics.
 In Python, the built-in set does not record insertion order.
 SortedSet in Python does not preserve the order of elements with equal keys, either.
+SortedSet in JavaScript keeps only one instance of equal elements,
+so the order is solely determined by the comparator function.
 
 However Set tries to mimic Map, it poses more problems than Map nevertheless.
 
