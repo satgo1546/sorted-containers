@@ -181,7 +181,7 @@ export interface SortedSet<T> {
 }
 
 SortedSet.prototype[Symbol.toStringTag] = 'SortedSet'
-SortedSet.prototype.has = AbstractSortedArray.prototype['_has']
+SortedSet.prototype.has = AbstractSortedArray.prototype._has
 SortedSet.prototype.keys = SortedSet.prototype.values
 	= AbstractSortedArray.prototype[Symbol.iterator]
 
@@ -192,16 +192,16 @@ export function checkSortedSet<T>(self: SortedSet<T>) {
 	checkAbstractSortedArray(self)
 
 	// Check all sublists are sorted.
-	for (const sublist of self['_lists']) {
+	for (const sublist of self._lists) {
 		for (let pos = 1; pos < sublist.length; pos++) {
-			assert(self['_cmp'](sublist[pos - 1], sublist[pos]) < 0)
+			assert(self._cmp(sublist[pos - 1], sublist[pos]) < 0)
 		}
 	}
 
 	// Check beginning/end of sublists are sorted.
-	for (let pos = 1; pos < self['_lists'].length; pos++) {
-		const l = self['_lists'][pos - 1][self['_lists'][pos - 1].length - 1]
-		const r = self['_lists'][pos][0]
-		assert(self['_cmp'](l, r) < 0)
+	for (let pos = 1; pos < self._lists.length; pos++) {
+		const l = self._lists[pos - 1][self._lists[pos - 1].length - 1]
+		const r = self._lists[pos][0]
+		assert(self._cmp(l, r) < 0)
 	}
 }

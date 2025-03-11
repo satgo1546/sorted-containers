@@ -31,14 +31,21 @@ export interface SortedArrayConstructorOptions<T> {
 
 export abstract class AbstractSortedArray<T> {
 	static DEFAULT_LOAD_FACTOR = 1000
-	protected readonly _load: number
-	protected readonly _cmp: (a: T, b: T) => number
+	/** @internal */
+	readonly _load: number
+	/** @internal */
+	readonly _cmp: (a: T, b: T) => number
 
-	protected _len = 0
-	protected _lists: T[][] = []
-	protected _maxes: T[] = []
-	protected _index: number[] = []
-	protected _offset = 0
+	/** @internal */
+	_len = 0
+	/** @internal */
+	_lists: T[][] = []
+	/** @internal */
+	_maxes: T[] = []
+	/** @internal */
+	_index: number[] = []
+	/** @internal */
+	_offset = 0
 
 	/**
 	 * Initialize a sorted container instance.
@@ -73,8 +80,10 @@ export abstract class AbstractSortedArray<T> {
 	 * Updates the index when the sublist length is less than double the load level.
 	 * This requires incrementing the nodes in a traversal from the leaf node to the root.
 	 * For an example traversal see {@link _loc}.
+	 *
+	 * @internal
 	 */
-	protected _expand(pos: number): void {
+	_expand(pos: number): void {
 		if (this._lists[pos].length > (this._load << 1)) {
 			const _lists_pos = this._lists[pos]
 			const half = _lists_pos.splice(this._load)
@@ -110,8 +119,10 @@ export abstract class AbstractSortedArray<T> {
 
 	/**
 	 * Return true if `value` is an element of the sorted container.
+	 *
+	 * @internal
 	 */
-	protected _has(value: T): boolean {
+	_has(value: T): boolean {
 		if (!this._maxes.length) return false
 
 		const pos = bisectLeft(this._maxes, value, this._cmp)
@@ -158,8 +169,10 @@ export abstract class AbstractSortedArray<T> {
 	 *
 	 * @param pos - Lists index.
 	 * @param idx - Sublist index.
+	 *
+	 * @internal
 	 */
-	protected _delete(pos: number, idx: number): void {
+	_delete(pos: number, idx: number): void {
 		const _lists_pos = this._lists[pos]
 		_lists_pos.splice(idx, 1)
 		this._len--
@@ -216,8 +229,10 @@ export abstract class AbstractSortedArray<T> {
 	 * @param pos - Lists index.
 	 * @param idx - Sublist index.
 	 * @returns Index in sorted container.
+	 *
+	 * @internal
 	 */
-	protected _loc(pos: number, idx: number): number {
+	_loc(pos: number, idx: number): number {
 		if (pos === 0) return idx
 		if (!this._index.length) this._buildIndex()
 
@@ -254,8 +269,10 @@ export abstract class AbstractSortedArray<T> {
 	 *
 	 * @param idx - Index in sorted container.
 	 * @returns (lists index, sublist index) pair.
+	 * 
+	 * @internal
 	 */
-	protected _pos(idx: number): [number, number] {
+	_pos(idx: number): [number, number] {
 		if (idx < 0) {
 			const lastLength = this._lists[this._lists.length - 1].length
 
@@ -307,8 +324,10 @@ export abstract class AbstractSortedArray<T> {
 	 *
 	 * When built, the index can be used for efficient indexing into the list.
 	 * See the comment and notes on {@link _pos} for details.
+	 * 
+	 * @internal
 	 */
-	protected _buildIndex(): void {
+	_buildIndex(): void {
 		const row0 = this._lists.map(list => list.length)
 
 		if (row0.length === 1) {
@@ -564,8 +583,10 @@ export abstract class AbstractSortedArray<T> {
 	 * See {@link _pos} for details on how an index is converted to an index pair.
 	 *
 	 * When `reverse` is `true`, values are yielded from the iterator in reverse order.
+	 * 
+	 * @internal
 	 */
-	protected _islice(minPos: number, minIdx: number, maxPos: number, maxIdx: number, reverse: boolean): IteratorObject<T, undefined, unknown> {
+	_islice(minPos: number, minIdx: number, maxPos: number, maxIdx: number, reverse: boolean): IteratorObject<T, undefined, unknown> {
 		// Rolling our own Iterator object in this case is both simpler and more performant than using a generator function.
 		if (reverse) {
 			let pos = maxPos
@@ -863,15 +884,7 @@ export abstract class AbstractSortedArray<T> {
  *
  * This is a function instead of a method so that it can be tree-shaken.
  */
-export const checkAbstractSortedArray = (<T>(self: {
-	_load: number,
-	_cmp: (a: T, b: T) => number,
-	_len: number,
-	_lists: T[][],
-	_maxes: T[],
-	_index: number[],
-	_offset: number,
-}): void => {
+export function checkAbstractSortedArray<T>(self: AbstractSortedArray<T>): void {
 	try {
 		assert(self._load >= 4)
 		assert(self._maxes.length === self._lists.length)
@@ -949,4 +962,4 @@ export const checkAbstractSortedArray = (<T>(self: {
 		console.error('lists', self._lists.length, self._lists)
 		throw e
 	}
-}) as unknown as <T>(self: AbstractSortedArray<T>) => void
+}

@@ -14,5 +14,6 @@
 		"allowImportingTsExtensions": true,
 		"declaration": true,
 		"emitDeclarationOnly": true,
+		"stripInternal": true,
 	},
 }

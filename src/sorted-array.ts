@@ -195,6 +195,6 @@ export interface SortedArray<T> {
 }
 
 SortedArray.prototype[Symbol.toStringTag] = 'SortedArray'
-SortedArray.prototype.includes = AbstractSortedArray.prototype['_has']
+SortedArray.prototype.includes = AbstractSortedArray.prototype._has
 
 export { checkAbstractSortedArray as checkSortedArray } from './abstract-sorted-array.ts'

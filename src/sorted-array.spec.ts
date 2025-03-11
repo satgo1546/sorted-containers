@@ -1046,7 +1046,7 @@ describe('SortedArray modulo 10', () => {
 
 	test('check throws', () => {
 		const slt = new SortedArray(range(10), { comparator: moduloComparator, loadFactor: 4 })
-		slt['_len'] = 5
+		slt._len = 5
 		expect(() => checkSortedArray(slt)).toThrow()
 	})
 })
@@ -1500,7 +1500,7 @@ describe('SortedArray negate', () => {
 
 	test('checkSortedArray', () => {
 		const slt = new SortedArray(range(10), { comparator: negateComparator })
-		slt['_len'] = 5
+		slt._len = 5
 		expect(() => checkSortedArray(slt)).toThrow()
 	})
 })
