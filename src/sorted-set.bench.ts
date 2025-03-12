@@ -1,13 +1,13 @@
 import { describe, makeStockAndBench } from './benchmark-utils.ts'
 import seedrandom from 'seedrandom'
-import { SortedArray } from './sorted-array.ts'
+import { SortedSet } from './sorted-set.ts'
 import { AVLTree } from 'avl'
 import SplayTree from 'splaytree'
 import { bisectLeft, bisectRight } from './bisect.ts'
 import { RBTree } from 'bintrees'
 import { TreeSet } from 'jstreemap'
 import { OrderedSet } from 'js-sdsl'
-import SortedSet from 'collections/sorted-set.js'
+import CollectionsSortedSet from 'collections/sorted-set.js'
 
 let random = seedrandom('')
 const [stockArray, benchArrayReadOnly, benchArray] = makeStockAndBench('Array', () => Array.from({ length: 1000000 }, (_, i) => i * 2))
@@ -22,9 +22,9 @@ const [, benchSetReadOnly, benchSet] = makeStockAndBench('Set', () => new Set(st
 
 const [, benchSortedArrayReadOnly, benchSortedArray] = makeStockAndBench('SortedSet', () => {
 	// Insert values one by one instead of `new SortedSet(list)` to align with other implementations.
-	const slt = new SortedArray<number>()
-	for (const val of list) slt.add(val)
-	return slt
+	const ss = new SortedSet<number>()
+	for (const val of list) ss.add(val)
+	return ss
 })
 const [, benchAVLReadOnly, benchAVL] = makeStockAndBench('avl', () => {
 	const tree = new AVLTree<number>(undefined, true)
@@ -52,13 +52,13 @@ const [, benchOrderedSetReadOnly, benchOrderedSet] = makeStockAndBench('js-sdsl 
 	return set
 })
 const [, benchCollectionsSortedSetReadOnly, benchCollectionsSortedSet] = makeStockAndBench('collections.js SortedSet', () => {
-	let set = new SortedSet()
+	let set = new CollectionsSortedSet()
 	for (const val of list) set.push(val)
 	return set
 })
 
 describe('initialize with 1,000,000 elements', () => {
-	benchSortedArrayReadOnly(() => new SortedArray(list).length)
+	benchSortedArrayReadOnly(() => new SortedSet(list).size)
 	benchArrayReadOnly(() => {
 		const arr: number[] = []
 		for (const val of list.slice().sort((a, b) => a - b)) {
@@ -88,7 +88,7 @@ describe('initialize with 1,000,000 elements', () => {
 		return set.size
 	})
 	benchOrderedSetReadOnly(() => new OrderedSet<number>(list, undefined, true).length)
-	benchCollectionsSortedSetReadOnly(() => new SortedSet(list).length)
+	benchCollectionsSortedSetReadOnly(() => new CollectionsSortedSet(list).length)
 })
 
 for (const [description, values] of Object.entries({
@@ -98,7 +98,7 @@ for (const [description, values] of Object.entries({
 })) describe(description, () => {
 	benchSortedArray(slt => {
 		for (const val of values) slt.add(val)
-		return slt.length
+		return slt.size
 	})
 
 	benchArray(arr => {
@@ -151,7 +151,7 @@ for (const [description, values] of Object.entries({
 })) describe(description, () => {
 	benchSortedArray(slt => {
 		for (const val of values) slt.delete(val)
-		return slt.length
+		return slt.size
 	})
 
 	benchArray(arr => {
@@ -201,7 +201,7 @@ for (const [description, values] of Object.entries({
 describe('pop 1000 times', () => {
 	benchSortedArray(slt => {
 		for (let i = 0; i < 1000; i++) slt.pop()
-		return slt.length
+		return slt.size
 	})
 
 	benchArray(arr => {
@@ -385,7 +385,7 @@ describe('test for 2000 elements about half of which are nonexistent', () => {
 
 	benchSortedArrayReadOnly(slt => {
 		let sum = 0
-		for (const val of values) if (slt.includes(val)) sum++
+		for (const val of values) if (slt.has(val)) sum++
 		return sum
 	})
 
@@ -441,7 +441,7 @@ describe('test for 2000 elements about half of which are nonexistent', () => {
 describe('convert to Array', () => {
 	benchSortedArrayReadOnly(slt => slt.slice().length)
 	benchArrayReadOnly(arr => arr.slice().length)
-	benchSetReadOnly(set => Array.from(set).sort((a, b) => a - b))
+	benchSetReadOnly(set => Array.from(set).sort((a, b) => a - b).length)
 	benchAVLReadOnly(tree => tree.keys().length)
 	benchSplayReadOnly(tree => tree.keys().length)
 	benchRBTreeReadOnly(tree => {
