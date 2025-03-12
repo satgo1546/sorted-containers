@@ -287,11 +287,13 @@ export abstract class AbstractSortedArray<T> {
 
 			idx += this._len
 
+			// Indices should have been bounds checked before entering this method.
+			/* v8 ignore next 6 */
 			if (idx < 0) {
-				throw new Error('list index out of range')
+				throw new Error('index out of range')
 			}
 		} else if (idx >= this._len) {
-			throw new Error('list index out of range')
+			throw new Error('index out of range')
 		}
 
 		if (idx < this._lists[0].length) {
@@ -335,11 +337,8 @@ export abstract class AbstractSortedArray<T> {
 	_buildIndex(): void {
 		const row0 = this._lists.map(list => list.length)
 
-		if (row0.length === 1) {
-			this._index = row0
-			this._offset = 0
-			return
-		}
+		// Checking for `row0.length === 1` is not necessary because the general algorithm works,
+		// and other methods special case the first and the last sublists anyway.
 
 		const row1: number[] = []
 		for (let i = 1; i < row0.length; i += 2) {
@@ -794,7 +793,7 @@ export abstract class AbstractSortedArray<T> {
 			return val
 		}
 
-		if (index >= 0 && index < this._lists[0].length) {
+		if (index > 0 && index < this._lists[0].length) {
 			const val = this._lists[0][index]
 			this._delete(0, index)
 			return val
@@ -816,23 +815,6 @@ export abstract class AbstractSortedArray<T> {
 		const val = this._lists[pos][idx]
 		this._delete(pos, idx)
 		return val
-	}
-
-	/**
-	 * Return [pos, idx] of the first `value` found in the sorted container, or undefined if `value` is not present.
-	 *
-	 * @internal
-	 */
-	_indexOf(value: T): [pos: number, idx: number] | undefined {
-		if (!this._len) return
-
-		const posLeft = bisectLeft(this._maxes, value, this._cmp)
-		if (posLeft === this._maxes.length) return
-
-		const idxLeft = bisectLeft(this._lists[posLeft], value, this._cmp)
-		if (this._cmp(this._lists[posLeft][idxLeft], value)) return
-
-		return [posLeft, idxLeft]
 	}
 
 	/**

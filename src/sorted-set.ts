@@ -181,7 +181,7 @@ export class SortedSet<T> extends AbstractSortedArray<T> {
 	 * @param value - Value to add to the SortedSet.
 	 */
 	add(value: T): this {
-		if (this._maxes.length) {
+		if (this._len) {
 			let pos = bisectLeft(this._maxes, value, this._cmp)
 
 			if (pos === this._maxes.length) {

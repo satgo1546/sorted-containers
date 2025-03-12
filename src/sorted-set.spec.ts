@@ -145,10 +145,46 @@ describe('SortedSet', () => {
 		expect(temp.isDisjointFrom([-1, 0, 1])).toBe(false)
 	})
 
+	test('forEach', () => {
+		const ss = new SortedSet(Array(10000).keys())
+		const arr: number[] = []
+		ss.forEach(function (x, i, a) {
+			expect(x).toBe(i)
+			expect(i).toBe(arr.length)
+			expect(a).toBe(ss)
+			expect(this).toBe(Object)
+			arr.push(x)
+		}, Object)
+		expect(arr).toStrictEqual(Array.from({ length: 10000 }, (_, i) => i))
+	})
+
 	test('iter', () => {
 		const temp = new SortedSet(Array(100).keys(), { loadFactor: 7 })
 		for (const val of temp) {
 			expect(val).toBe(temp.at(val))
+		}
+	})
+
+	test('iter keys', () => {
+		const temp = new SortedSet(Array(100).keys(), { loadFactor: 7 })
+		for (const val of temp.keys()) {
+			expect(val).toBe(temp.at(val))
+		}
+	})
+
+	test('iter values', () => {
+		const temp = new SortedSet(Array(100).keys(), { loadFactor: 7 })
+		for (const val of temp.values()) {
+			expect(val).toBe(temp.at(val))
+		}
+	})
+
+	test('iter entries', () => {
+		const temp = new SortedSet(Array(100).keys(), { loadFactor: 7 })
+		let i = 0
+		for (const val of temp.entries()) {
+			expect(val).toStrictEqual([i, i])
+			i++
 		}
 	})
 
@@ -289,11 +325,24 @@ describe('SortedSet', () => {
 	test('add', () => {
 		const temp = new SortedSet(Array(100).keys(), { loadFactor: 7 })
 		temp.add(100)
+		checkSortedSet(temp)
+		expect(temp.size).toBe(101)
 		temp.add(90)
 		checkSortedSet(temp)
+		expect(temp.size).toBe(101)
+		temp.add(1.5)
+		checkSortedSet(temp)
+		expect(temp.size).toBe(102)
+		expect(temp.has(1.5)).toBe(true)
 		for (let val = 0; val <= 100; val++) {
 			expect(temp.has(val)).toBe(true)
 		}
+
+		temp.clear()
+		temp.add(100)
+		checkSortedSet(temp)
+		expect(temp.size).toBe(1)
+		expect(temp.has(100)).toBe(true)
 	})
 
 	test('bisect', () => {
@@ -360,7 +409,7 @@ describe('SortedSet', () => {
 		}
 	})
 
-	test('difference', () => {
+	test('difference small', () => {
 		const temp = new SortedSet(Array(100).keys(), { loadFactor: 7 })
 		const that = temp.difference(Array(10).keys())
 			.difference(Array.from({ length: 10 }, (_, i) => i + 10))
@@ -369,6 +418,19 @@ describe('SortedSet', () => {
 		}
 		for (let val = 0; val < 80; val++) {
 			expect(that.at(val)).toBe(val + 20)
+		}
+	})
+
+	test('difference big', () => {
+		const temp = new SortedSet(Array(100).keys(), { loadFactor: 7 })
+		const that = temp.difference(Array.from({ length: 90 }, (_, i) => i + 20).reverse())
+		expect(temp.size).toBe(100)
+		for (let val = 0; val < 100; val++) {
+			expect(temp.has(val)).toBe(true)
+		}
+		expect(that.size).toBe(20)
+		for (let val = 0; val < 20; val++) {
+			expect(that.at(val)).toBe(val)
 		}
 	})
 
@@ -400,7 +462,7 @@ describe('SortedSet', () => {
 		}
 	})
 
-	test('intersection', () => {
+	test('intersection small', () => {
 		const temp = new SortedSet(Array(100).keys(), { loadFactor: 7 })
 		const that = temp.intersection(Array.from({ length: 20 }, (_, i) => i))
 			.intersection(Array.from({ length: 20 }, (_, i) => i + 10))
@@ -408,6 +470,18 @@ describe('SortedSet', () => {
 			expect(that.at(val)).toBe(val + 10)
 		}
 		for (let val = 0; val < 100; val++) {
+			expect(temp.has(val)).toBe(true)
+		}
+	})
+
+	test('intersection big', () => {
+		const temp = new SortedSet(Array(20).keys(), { loadFactor: 7 })
+		const that = temp.intersection(Array.from({ length: 100 }, (_, i) => i + 10).reverse())
+		for (let val = 0; val < 10; val++) {
+			expect(that.at(val)).toBe(val + 10)
+		}
+		expect(temp.size).toBe(20)
+		for (let val = 0; val < 20; val++) {
 			expect(temp.has(val)).toBe(true)
 		}
 	})
@@ -568,5 +642,53 @@ describe('SortedSet', () => {
 		const temp = new SortedSet(Array(10).keys())
 		expect(temp.toJSON()).toStrictEqual(Array.from({ length: 10 }, (_, i) => i))
 		expect(JSON.stringify(temp)).toBe('[0,1,2,3,4,5,6,7,8,9]')
+	})
+})
+
+describe('JavaScript specialty', () => {
+	test('NaN with default comparator', () => {
+		const ss = new SortedSet(Array(100).fill(NaN), { loadFactor: 17 })
+		expect(ss.size).toBe(1)
+		expect(Array.from(ss)).toStrictEqual([NaN])
+		expect(ss.has(NaN)).toBe(true)
+		expect(ss.indexOf(NaN)).toBe(0)
+	})
+
+	test('±0 with default comparator', () => {
+		const ss = new SortedSet(Array.from({ length: 100 }, (_, i) => (i % 2 - .5) * 0), { loadFactor: 17 })
+		expect(ss.size).toBe(1)
+		expect(Array.from(ss)).toStrictEqual([-0])
+		expect(Array.from(ss)).not.toStrictEqual([0])
+		expect(ss.has(0)).toBe(true)
+		expect(ss.has(-0)).toBe(true)
+	})
+
+	test('undefined and null', () => {
+		const ss = new SortedSet(
+			Array.from({ length: 100 }, (_, i) => i % 3 ? null : undefined),
+			{
+				comparator(a, b) {
+					const aStr = '' + a
+					const bStr = '' + b
+					return +(aStr > bStr) - +(aStr < bStr)
+				},
+				loadFactor: 17,
+			},
+		)
+		expect(ss.size).toBe(2)
+		expect(Array.from(ss)).toStrictEqual([null, undefined])
+		expect(ss.at(-3)).toBeUndefined()
+		expect(ss.at(-2)).toBeNull()
+		expect(ss.at(-1)).toBeUndefined()
+		expect(ss.at(0)).toBeNull()
+		expect(ss.at(1)).toBeUndefined()
+		expect(ss.at(2)).toBeUndefined()
+		expect(ss.at(3)).toBeUndefined()
+		expect(ss.has(undefined)).toBe(true)
+		expect(ss.has(null)).toBe(true)
+		expect(ss.indexOf(undefined)).toBe(1)
+		expect(ss.indexOf(null)).toBe(0)
+		expect(ss.count(undefined)).toBe(1)
+		expect(ss.count(null)).toBe(1)
 	})
 })

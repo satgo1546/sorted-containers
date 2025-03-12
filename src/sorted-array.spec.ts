@@ -24,7 +24,10 @@ describe('SortedArray', () => {
 		expect(Array.from(slt)).toStrictEqual(Array.from(range(10000)))
 
 		slt.clear()
+		expect(slt._len).toBe(0)
 		expect(slt.length).toBe(0)
+		expect(slt._maxes).toStrictEqual([])
+		expect(slt._lists).toStrictEqual([])
 		checkSortedArray(slt)
 	})
 
@@ -122,12 +125,25 @@ describe('SortedArray', () => {
 			checkSortedArray(slt)
 		}
 		expect(slt.length).toBe(0)
+		expect(slt._maxes).toStrictEqual([])
+		expect(slt._lists).toStrictEqual([])
 	})
 
 	test('getitem', () => {
-		let slt = new SortedArray(undefined, { loadFactor: 17 })
 		const random = seedrandom('')
+		let slt = new SortedArray(undefined, { loadFactor: 4 })
+		for (let idx = 0; idx < 100; idx++) {
+			expect(slt.at(idx)).toBeUndefined()
+			slt.add(random())
+			expect(typeof slt.at(idx)).toBe('number')
+		}
 
+		slt = new SortedArray(undefined, { loadFactor: 17 })
+		for (let idx = -100; idx < 100; idx++) {
+			expect(slt.at(idx)).toBeUndefined()
+		}
+
+		slt.clear()
 		const lst: number[] = []
 
 		for (const rpt of range(100)) {
@@ -199,7 +215,9 @@ describe('SortedArray', () => {
 
 	test('getitem_indexerror1', () => {
 		let slt = new SortedArray<number>
-		expect(slt.at(5)).toBeUndefined()
+		for (let i = -100; i < 100; i++) {
+			expect(slt.at(i)).toBeUndefined()
+		}
 	})
 
 	test('getitem_indexerror2', () => {
@@ -215,6 +233,12 @@ describe('SortedArray', () => {
 	test('delitem', () => {
 		let slt = new SortedArray(range(100), { loadFactor: 17 })
 		const random = seedrandom('')
+		for (let i = 0; i < 100; i++) {
+			slt.deleteAt(100 + i)
+			slt.deleteAt(-101 - i)
+			expect(slt.length).toBe(100)
+			checkSortedArray(slt)
+		}
 		while (slt.length > 0) {
 			const pos = Math.floor(random() * slt.length)
 			slt.deleteAt(pos)
@@ -237,12 +261,13 @@ describe('SortedArray', () => {
 	test('forEach', () => {
 		let slt = new SortedArray(range(10000))
 		const arr: number[] = []
-		slt.forEach((x, i, a) => {
+		slt.forEach(function (x, i, a) {
 			expect(typeof x).toBe('number')
 			expect(i).toBe(arr.length)
 			expect(a).toBe(slt)
+			expect(this).toBe(Object)
 			arr.push(x)
-		})
+		}, Object)
 		expect(arr).toStrictEqual(Array.from(range(10000)))
 	})
 
@@ -256,6 +281,9 @@ describe('SortedArray', () => {
 		let slt = new SortedArray(range(10000))
 		const rev = slt.reversed()
 		expect(Array.from(rev)).toStrictEqual(Array.from(range(9999, -1, -1)))
+
+		slt = new SortedArray(undefined, { loadFactor: 7 })
+		expect(Array.from(slt.reversed())).toStrictEqual([])
 	})
 
 	test('islice', () => {
@@ -266,19 +294,19 @@ describe('SortedArray', () => {
 		const values = Array.from(range(53))
 		slt.update(values)
 
-		for (const start of range(53)) {
-			for (const stop of range(53)) {
+		for (const start of range(-55, 55)) {
+			for (const stop of range(-55, 55)) {
 				expect(Array.from(slt.islice(start, stop))).toStrictEqual(values.slice(start, stop))
 				expect(Array.from(slt.islice(start, stop, true))).toStrictEqual(values.slice(start, stop).reverse())
 			}
 		}
 
-		for (const start of range(53)) {
+		for (const start of range(-55, 55)) {
 			expect(Array.from(slt.islice(start))).toStrictEqual(values.slice(start))
 			expect(Array.from(slt.islice(start, undefined, true))).toStrictEqual(values.slice(start).reverse())
 		}
 
-		for (const stop of range(53)) {
+		for (const stop of range(-55, 55)) {
 			expect(Array.from(slt.islice(0, stop))).toStrictEqual(values.slice(0, stop))
 			expect(Array.from(slt.islice(0, stop, true))).toStrictEqual(values.slice(0, stop).reverse())
 		}
@@ -400,6 +428,8 @@ describe('SortedArray', () => {
 		expect(slt.pop(-2)).toBe(7)
 		checkSortedArray(slt)
 		expect(slt.pop(4)).toBe(5)
+		checkSortedArray(slt)
+		expect(slt.pop(1)).toBe(2)
 		checkSortedArray(slt)
 	})
 
@@ -686,6 +716,7 @@ describe('SortedArray modulo 10', () => {
 
 		slt.add(5)
 		checkSortedArray(slt)
+		expect(slt.at(0)).toBe(5)
 		slt.clear()
 
 		const lst = Array.from({ length: 100 }, () => random())
@@ -771,19 +802,36 @@ describe('SortedArray modulo 10', () => {
 		expect(slt2.at(-101)).toBeUndefined()
 	})
 
-	test('deleteAt throws', () => {
+	test('deleteAt', () => {
 		const random = seedrandom('')
 
-		const slt = new SortedArray(range(100), { comparator: moduloComparator, loadFactor: 17 })
+		let slt = new SortedArray(range(100), { comparator: moduloComparator, loadFactor: 17 })
+
+		for (let i = 0; i < 100; i++) {
+			slt.deleteAt(100 + i)
+			expect(slt.length).toBe(100)
+			checkSortedArray(slt)
+
+			slt.deleteAt(-101 - i)
+			expect(slt.length).toBe(100)
+			checkSortedArray(slt)
+		}
+
 		while (slt.length > 0) {
 			slt.deleteAt(Math.floor(random() * slt.length))
 			checkSortedArray(slt)
 		}
 
-		const slt2 = new SortedArray(range(100), { comparator: moduloComparator, loadFactor: 17 })
-		slt2.deleteSlice()
-		expect(slt2.length).toBe(0)
-		checkSortedArray(slt2)
+		slt = new SortedArray(range(100), { comparator: moduloComparator, loadFactor: 17 })
+		slt.deleteSlice()
+		expect(slt.length).toBe(0)
+		checkSortedArray(slt)
+
+		for (const i of range(-100, 100)) {
+			slt.deleteAt(i)
+			expect(slt.length).toBe(0)
+			checkSortedArray(slt)
+		}
 	})
 
 	test('deleteSlice', () => {
@@ -819,22 +867,22 @@ describe('SortedArray modulo 10', () => {
 		const sl = new SortedArray(undefined, { comparator: moduloComparator, loadFactor: 7 })
 		expect([...sl.islice()]).toStrictEqual([])
 
-		const values = Array.from(range(100)).sort(moduloComparator)
+		const values = Array.from(range(53)).sort(moduloComparator)
 		sl.update(values)
 
-		for (const start of range(53)) {
-			for (const stop of range(53)) {
+		for (const start of range(-55, 55)) {
+			for (const stop of range(-55, 55)) {
 				expect([...sl.islice(start, stop)]).toStrictEqual(values.slice(start, stop))
 				expect([...sl.islice(start, stop, true)]).toStrictEqual(values.slice(start, stop).reverse())
 			}
 		}
 
-		for (const start of range(53)) {
+		for (const start of range(-55, 55)) {
 			expect([...sl.islice(start)]).toStrictEqual(values.slice(start))
 			expect([...sl.islice(start, undefined, true)]).toStrictEqual(values.slice(start).reverse())
 		}
 
-		for (const stop of range(53)) {
+		for (const stop of range(-55, 55)) {
 			expect([...sl.islice(undefined, stop)]).toStrictEqual(values.slice(undefined, stop))
 			expect([...sl.islice(undefined, stop, true)]).toStrictEqual(values.slice(undefined, stop).reverse())
 		}
@@ -944,6 +992,8 @@ describe('SortedArray modulo 10', () => {
 		expect(slt.pop(-2)).toBe(7)
 		checkSortedArray(slt)
 		expect(slt.pop(4)).toBe(5)
+		checkSortedArray(slt)
+		expect(slt.pop(1)).toBe(2)
 		checkSortedArray(slt)
 	})
 
@@ -1252,6 +1302,12 @@ describe('SortedArray negate', () => {
 	test('deleteAt', () => {
 		const random = seedrandom('')
 		const slt = new SortedArray(range(100), { comparator: negateComparator, loadFactor: 17 })
+		for (let i = 0; i < 100; i++) {
+			slt.deleteAt(100 + i)
+			slt.deleteAt(-101 - i)
+			expect(slt.length).toBe(100)
+			checkSortedArray(slt)
+		}
 		while (slt.length > 0) {
 			slt.deleteAt(Math.floor(random() * slt.length))
 			checkSortedArray(slt)
@@ -1297,29 +1353,21 @@ describe('SortedArray negate', () => {
 		const values = Array.from(range(53)).sort(negateComparator)
 		slt.update(values)
 
-		for (const start of range(53)) {
-			for (const stop of range(53)) {
-				expect(Array.from(slt.islice(start, stop))).toStrictEqual(
-					values.slice(start, stop)
-				)
-				expect(Array.from(slt.islice(start, stop, true))).toStrictEqual(
-					values.slice(start, stop).reverse()
-				)
+		for (const start of range(-55, 55)) {
+			for (const stop of range(-55, 55)) {
+				expect([...slt.islice(start, stop)]).toStrictEqual(values.slice(start, stop))
+				expect([...slt.islice(start, stop, true)]).toStrictEqual(values.slice(start, stop).reverse())
 			}
 		}
 
-		for (const start of range(53)) {
-			expect(Array.from(slt.islice(start))).toStrictEqual(values.slice(start))
-			expect(Array.from(slt.islice(start, undefined, true))).toStrictEqual(
-				values.slice(start).reverse()
-			)
+		for (const start of range(-55, 55)) {
+			expect([...slt.islice(start)]).toStrictEqual(values.slice(start))
+			expect([...slt.islice(start, undefined, true)]).toStrictEqual(values.slice(start).reverse())
 		}
 
-		for (const stop of range(53)) {
-			expect(Array.from(slt.islice(undefined, stop)))
-				.toStrictEqual(values.slice(0, stop))
-			expect(Array.from(slt.islice(undefined, stop, true)))
-				.toStrictEqual(values.slice(0, stop).reverse())
+		for (const stop of range(-55, 55)) {
+			expect([...slt.islice(undefined, stop)]).toStrictEqual(values.slice(0, stop))
+			expect([...slt.islice(undefined, stop, true)]).toStrictEqual(values.slice(0, stop).reverse())
 		}
 	})
 
@@ -1430,6 +1478,8 @@ describe('SortedArray negate', () => {
 		checkSortedArray(slt)
 		expect(slt.pop(4)).toBe(4)
 		checkSortedArray(slt)
+		expect(slt.pop(1)).toBe(7)
+		checkSortedArray(slt)
 	})
 
 	test('pop errors', () => {
@@ -1502,5 +1552,55 @@ describe('SortedArray negate', () => {
 		const slt = new SortedArray(range(10), { comparator: negateComparator })
 		slt._len = 5
 		expect(() => checkSortedArray(slt)).toThrow()
+	})
+})
+
+describe('JavaScript specialty', () => {
+	test('NaN with default comparator', () => {
+		const slt = new SortedArray(Array(100).fill(NaN), { loadFactor: 17 })
+		expect(slt.length).toBe(100)
+		expect(Array.from(slt)).toStrictEqual(Array(100).fill(NaN))
+		expect(slt.at(50)).toBe(NaN)
+		expect(slt.includes(NaN)).toBe(true)
+		expect(slt.indexOf(NaN)).toBe(0)
+		expect(slt.count(NaN)).toBe(100)
+	})
+
+	test('±0 with default comparator', () => {
+		const arr = Array.from({ length: 100 }, (_, i) => (i % 2 - .5) * 0)
+		const slt = new SortedArray(arr, { loadFactor: 17 })
+		expect(slt.length).toBe(100)
+		expect(Array.from(slt)).toStrictEqual(arr)
+		expect(Array.from(slt)).not.toStrictEqual(Array(100).fill(0))
+		expect(slt.at(0)).toBe(-0)
+		expect(slt.at(0)).not.toBe(0)
+		expect(slt.at(51)).toBe(0)
+		expect(slt.at(51)).not.toBe(-0)
+	})
+
+	test('undefined and null', () => {
+		const slt = new SortedArray(
+			Array.from({ length: 100 }, (_, i) => i % 3 ? null : undefined),
+			{
+				comparator(a, b) {
+					const aStr = '' + a
+					const bStr = '' + b
+					return +(aStr > bStr) - +(aStr < bStr)
+				},
+				loadFactor: 17,
+			},
+		)
+		expect(slt.length).toBe(100)
+		expect(Array.from(slt)).toStrictEqual(Array(66).fill(null).concat(Array(34).fill(undefined)))
+		expect(slt.at(50)).toBeNull()
+		expect(slt.at(51)).toBeNull()
+		expect(slt.at(-3)).toBeUndefined()
+		expect(slt.at(-103)).toBeUndefined()
+		expect(slt.includes(undefined)).toBe(true)
+		expect(slt.includes(null)).toBe(true)
+		expect(slt.indexOf(undefined)).toBe(66)
+		expect(slt.indexOf(null)).toBe(0)
+		expect(slt.count(undefined)).toBe(34)
+		expect(slt.count(null)).toBe(66)
 	})
 })
