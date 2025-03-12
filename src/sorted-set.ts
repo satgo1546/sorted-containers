@@ -62,6 +62,8 @@ import { AbstractSortedArray, checkAbstractSortedArray } from './abstract-sorted
  * - {@link SortedSet#count}
  * - {@link SortedSet#toString}
  * - {@link SortedSet#toJSON}
+ *
+ * @typeParam T - The element type.
  */
 export class SortedSet<T> extends AbstractSortedArray<T> {
 	isSubsetOf(other: Iterable<T>): boolean {
@@ -186,9 +188,11 @@ SortedSet.prototype.keys = SortedSet.prototype.values
 	= AbstractSortedArray.prototype[Symbol.iterator]
 
 /**
- * Check invariants of SortedSet.
+ * Check the invariants of a SortedSet.
+ *
+ * @throws {Error} If the SortedSet is corrupted.
  */
-export function checkSortedSet<T>(self: SortedSet<T>) {
+export function checkSortedSet(self: SortedSet<unknown>) {
 	checkAbstractSortedArray(self)
 
 	// Check all sublists are sorted.

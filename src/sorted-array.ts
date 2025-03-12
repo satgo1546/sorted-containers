@@ -1,5 +1,5 @@
-import { AbstractSortedArray } from './abstract-sorted-array.ts'
 import { bisectLeft, bisectRight, insort } from './bisect.ts'
+import { AbstractSortedArray, checkAbstractSortedArray } from './abstract-sorted-array.ts'
 
 /**
  * SortedArray is a sorted mutable collection.
@@ -45,7 +45,7 @@ import { bisectLeft, bisectRight, insort } from './bisect.ts'
  * - {@link SortedArray#length}
  * - {@link SortedArray#toJSON}
  * - {@link SortedArray#toString}
- * 
+ *
  * @typeParam T - The element type.
  */
 export class SortedArray<T> extends AbstractSortedArray<T> {
@@ -197,4 +197,9 @@ export interface SortedArray<T> {
 SortedArray.prototype[Symbol.toStringTag] = 'SortedArray'
 SortedArray.prototype.includes = AbstractSortedArray.prototype._has
 
-export { checkAbstractSortedArray as checkSortedArray } from './abstract-sorted-array.ts'
+/**
+ * Check the invariants of a SortedArray.
+ *
+ * @throws {Error} If the SortedArray is corrupted.
+ */
+export const checkSortedArray: (self: SortedArray<unknown>) => void = checkAbstractSortedArray

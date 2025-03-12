@@ -1,6 +1,11 @@
 import { assert, defaultComparator, IteratorPrototype } from './common.ts'
 import { bisectLeft, bisectRight } from './bisect.ts'
 
+/**
+ * An object that specifies characteristics of a sorted container.
+ *
+ * @typeParam T - The type of elements.
+ */
 export interface SortedArrayConstructorOptions<T> {
 	/**
 	 * Function used to determine the order of the elements.
@@ -18,13 +23,13 @@ export interface SortedArrayConstructorOptions<T> {
 
 	/**
 	 * Specifies the load-factor for sorted container sublists.
-	 * The default load factor of 1000 works well for lists from tens to tens-of-millions of values.
+	 * The default load factor of 1000 works well for arrays from tens to tens-of-millions of values.
 	 * Good practice is to use a value that is the cube root of the list size.
 	 * With billions of elements, the best load factor depends on your usage.
 	 * It's best to leave the load factor at the default until you start benchmarking.
 	 *
-	 * @see https://grantjenks.com/docs/sortedcontainers/implementation.html
-	 * @see https://grantjenks.com/docs/sortedcontainers/performance-scale.html
+	 * @see {@link https://grantjenks.com/docs/sortedcontainers/implementation.html | Implementation Details} in Python Sorted Containers
+	 * @see {@link https://grantjenks.com/docs/sortedcontainers/performance-scale.html | Performance at Scale} in Python Sorted Containers
 	 */
 	loadFactor?: number,
 }
@@ -269,7 +274,7 @@ export abstract class AbstractSortedArray<T> {
 	 *
 	 * @param idx - Index in sorted container.
 	 * @returns (lists index, sublist index) pair.
-	 * 
+	 *
 	 * @internal
 	 */
 	_pos(idx: number): [number, number] {
@@ -324,7 +329,7 @@ export abstract class AbstractSortedArray<T> {
 	 *
 	 * When built, the index can be used for efficient indexing into the list.
 	 * See the comment and notes on {@link _pos} for details.
-	 * 
+	 *
 	 * @internal
 	 */
 	_buildIndex(): void {
@@ -583,7 +588,7 @@ export abstract class AbstractSortedArray<T> {
 	 * See {@link _pos} for details on how an index is converted to an index pair.
 	 *
 	 * When `reverse` is `true`, values are yielded from the iterator in reverse order.
-	 * 
+	 *
 	 * @internal
 	 */
 	_islice(minPos: number, minIdx: number, maxPos: number, maxIdx: number, reverse: boolean): IteratorObject<T, undefined, unknown> {
@@ -880,11 +885,13 @@ export abstract class AbstractSortedArray<T> {
 }
 
 /**
- * Check invariants of AbstractSortedArray.
+ * Check the invariants of an AbstractSortedArray.
  *
  * This is a function instead of a method so that it can be tree-shaken.
+ *
+ * @throws {Error} If the AbstractSortedArray is corrupted.
  */
-export function checkAbstractSortedArray<T>(self: AbstractSortedArray<T>): void {
+export function checkAbstractSortedArray(self: AbstractSortedArray<unknown>): void {
 	try {
 		assert(self._load >= 4)
 		assert(self._maxes.length === self._lists.length)
