@@ -1,6 +1,6 @@
 {
 	"name": "sorted-containers",
-	"version": "0.2.0",
+	"version": "0.3.0",
 	"description": "[WIP] Sorted Containers — SortedArray, SortedMap, and SortedSet",
 	"main": "dist/index.js",
 	"module": "dist/index.mjs",

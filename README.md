@@ -6,6 +6,11 @@ Status: SortedArray and SortedSet works, published on npm.
 
 ---
 
+[![npm version](https://badge.fury.io/js/sorted-containers.svg?icon=si%3Anpm)](https://badge.fury.io/js/sorted-containers)
+[![Test](https://github.com/satgo1546/sorted-containers/actions/workflows/test.yml/badge.svg)](https://github.com/satgo1546/sorted-containers/actions/workflows/test.yml)
+[![minzipped size](https://badgen.net/bundlephobia/minzip/sorted-containers)](https://bundlephobia.com/package/sorted-containers)
+[![MIT license](LICENSE.svg)](https://opensource.org/licenses/MIT)
+
 **[sorted-containers](https://satgo1546.github.io/sorted-containers/)**
 is an MIT-licensed ordered collections library written in JavaScript.
 It aims to be the fastest of its kind.
