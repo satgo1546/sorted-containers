@@ -438,7 +438,7 @@ SortedSet.prototype.keys = SortedSet.prototype.values
  *
  * @throws {Error} If the SortedSet is corrupted.
  */
-export function checkSortedSet(self: SortedSet<unknown>) {
+export function checkSortedSet<T>(self: SortedSet<T>) {
 	checkAbstractSortedArray(self)
 
 	// Check all sublists are sorted.

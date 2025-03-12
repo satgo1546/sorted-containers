@@ -907,7 +907,7 @@ export abstract class AbstractSortedArray<T> {
  *
  * @throws {Error} If the AbstractSortedArray is corrupted.
  */
-export function checkAbstractSortedArray(self: AbstractSortedArray<unknown>): void {
+export function checkAbstractSortedArray<T>(self: AbstractSortedArray<T>): void {
 	try {
 		assert(self._load >= 4)
 		assert(self._maxes.length === self._lists.length)

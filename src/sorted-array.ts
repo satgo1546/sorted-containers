@@ -202,4 +202,4 @@ SortedArray.prototype.includes = AbstractSortedArray.prototype._has
  *
  * @throws {Error} If the SortedArray is corrupted.
  */
-export const checkSortedArray: (self: SortedArray<unknown>) => void = checkAbstractSortedArray
+export const checkSortedArray: <T>(self: SortedArray<T>) => void = checkAbstractSortedArray
