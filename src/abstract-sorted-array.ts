@@ -277,7 +277,7 @@ export abstract class AbstractSortedArray<T> {
 	 *
 	 * @internal
 	 */
-	_pos(idx: number): [number, number] {
+	_pos(idx: number): [pos: number, idx: number] {
 		if (idx < 0) {
 			const lastLength = this._lists[this._lists.length - 1].length
 
@@ -819,7 +819,24 @@ export abstract class AbstractSortedArray<T> {
 	}
 
 	/**
-	 * Return first index of `value` in sorted container, or -1 if `value` is not present.
+	 * Return [pos, idx] of the first `value` found in the sorted container, or undefined if `value` is not present.
+	 *
+	 * @internal
+	 */
+	_indexOf(value: T): [pos: number, idx: number] | undefined {
+		if (!this._len) return
+
+		const posLeft = bisectLeft(this._maxes, value, this._cmp)
+		if (posLeft === this._maxes.length) return
+
+		const idxLeft = bisectLeft(this._lists[posLeft], value, this._cmp)
+		if (this._cmp(this._lists[posLeft][idxLeft], value)) return
+
+		return [posLeft, idxLeft]
+	}
+
+	/**
+	 * Return first index of `value` in the sorted container, or -1 if `value` is not present.
 	 *
 	 * Index must be between `start` and `end` for the `value` to be considered present.
 	 * Negative indices count back from the last item.
@@ -851,15 +868,14 @@ export abstract class AbstractSortedArray<T> {
 		const idxLeft = bisectLeft(this._lists[posLeft], value, this._cmp)
 		if (this._cmp(this._lists[posLeft][idxLeft], value)) return -1
 
-		end--
 		const left = this._loc(posLeft, idxLeft)
 		if (start <= left) {
-			if (left <= end) {
+			if (left < end) {
 				return left
 			}
 		} else {
-			const right = this.bisectRight(value) - 1
-			if (start <= right) {
+			const right = this.bisectRight(value)
+			if (start < right) {
 				return start
 			}
 		}
