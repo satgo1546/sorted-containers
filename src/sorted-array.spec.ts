@@ -1603,4 +1603,29 @@ describe('JavaScript specialty', () => {
 		expect(slt.count(undefined)).toBe(34)
 		expect(slt.count(null)).toBe(66)
 	})
+
+	test('find', () => {
+		const slt = new SortedArray(Array.from({ length: 100 }, (_, i) => i * 2))
+		for (let i = 0; i < 100; i++) {
+			expect(slt.find(i * 2)).toBe(i * 2)
+			expect(slt.find(i * 2 + 1)).toBeUndefined()
+		}
+	})
+
+	test('find object', () => {
+		const arr = Array.from({ length: 100 }, (_, i) => ({
+			i,
+			v: i * 2,
+		}))
+		const slt = new SortedArray(arr.slice().reverse(), {
+			comparator: (a: { i: number }, b) => a.i - b.i,
+			loadFactor: 17,
+		})
+		for (let i = 0; i < 100; i++) {
+			expect(slt.find({ i })).toBe(arr[i])
+		}
+		for (let i = 100; i < 200; i++) {
+			expect(slt.find({ i })).toBeUndefined()
+		}
+	})
 })

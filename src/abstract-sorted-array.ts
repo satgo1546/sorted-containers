@@ -866,6 +866,39 @@ export abstract class AbstractSortedArray<T extends C, C = T> {
 	}
 
 	/**
+	 * Return the first element in the sorted container that is equal to the provided value.
+	 * If it is not found, undefined is returned.
+	 *
+	 * With the default comparator and primitive elements,
+	 * this method does not tell anything beyond whether the value exists in the sorted container.
+	 * However, it can turn out to be useful with a custom comparator.
+	 *
+	 * @example
+	 * const sl = new SortedArray(
+	 *   [
+	 *     { id: 1, value: 'one' },
+	 *     { id: 2, value: 'two' },
+	 *     { id: 3, value: 'three' },
+	 *   ],
+	 *   { comparator: (a, b) => a.id - b.id }
+	 * );
+	 * sl.find({ id: 2 }) // { id: 2, value: 'two' }
+	 *
+	 * @param value - The value to find.
+	 */
+	find(value: C): T | undefined {
+		if (!this._len)	return undefined
+
+		const pos = bisectLeft(this._maxes, value, this._cmp)
+		if (pos === this._maxes.length) return undefined
+
+		const idx = bisectLeft(this._lists[pos], value, this._cmp)
+		if (this._cmp(this._lists[pos][idx], value)) return undefined
+
+		return this._lists[pos][idx]
+	}
+
+	/**
 	 * Return sorted container as an ordinary Array.
 	 */
 	toJSON(): T[] {
