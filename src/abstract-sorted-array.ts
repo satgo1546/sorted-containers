@@ -4,7 +4,7 @@ import { bisectLeft, bisectRight } from './bisect.ts'
 /**
  * An object that specifies characteristics of a sorted container.
  *
- * @typeParam T - The type of elements.
+ * @typeParam T - The type of comparable elements.
  */
 export interface SortedArrayConstructorOptions<T> {
 	/**
@@ -34,12 +34,12 @@ export interface SortedArrayConstructorOptions<T> {
 	loadFactor?: number,
 }
 
-export abstract class AbstractSortedArray<T> {
+export abstract class AbstractSortedArray<T extends C, C = T> {
 	static DEFAULT_LOAD_FACTOR = 1000
 	/** @internal */
 	readonly _load: number
 	/** @internal */
-	readonly _cmp: (a: T, b: T) => number
+	readonly _cmp: (a: C, b: C) => number
 
 	/** @internal */
 	_len = 0
@@ -60,7 +60,7 @@ export abstract class AbstractSortedArray<T> {
 	 * @param iterable - Initial values (optional).
 	 * @param options - An object that specifies characteristics about the sorted container.
 	 */
-	constructor(iterable?: Iterable<T>, options?: SortedArrayConstructorOptions<T>) {
+	constructor(iterable?: Iterable<T>, options?: SortedArrayConstructorOptions<C>) {
 		this._load = options?.loadFactor ?? new.target.DEFAULT_LOAD_FACTOR
 		this._cmp = options?.comparator ?? defaultComparator
 		if (iterable) {
@@ -127,7 +127,7 @@ export abstract class AbstractSortedArray<T> {
 	 *
 	 * @internal
 	 */
-	_has(value: T): boolean {
+	_has(value: C): boolean {
 		if (!this._maxes.length) return false
 
 		const pos = bisectLeft(this._maxes, value, this._cmp)
@@ -150,7 +150,7 @@ export abstract class AbstractSortedArray<T> {
 	 * @param value - Value to discard from SortedArray.
 	 * @returns Returns true if an element in the SortedArray existed and has been removed, or false if the element does not exist.
 	 */
-	delete(value: T): boolean {
+	delete(value: C): boolean {
 		if (!this._maxes.length) return false
 
 		const pos = bisectLeft(this._maxes, value, this._cmp)
@@ -655,7 +655,7 @@ export abstract class AbstractSortedArray<T> {
 	 * @param reverse - Yield values in reverse order.
 	 * @returns Iterator.
 	 */
-	irange(minimum?: T, maximum?: T, includeMinimum = true, includeMaximum = true, reverse = false): IteratorObject<T, undefined, unknown> {
+	irange(minimum?: C, maximum?: C, includeMinimum = true, includeMaximum = true, reverse = false): IteratorObject<T, undefined, unknown> {
 		if (!this._maxes.length) return [][Symbol.iterator]()
 
 		// Calculate the minimum (pos, idx) pair.
@@ -717,7 +717,7 @@ export abstract class AbstractSortedArray<T> {
 	 * @param value - Insertion index of value in SortedArray.
 	 * @returns Index.
 	 */
-	bisectLeft(value: T): number {
+	bisectLeft(value: C): number {
 		if (!this._maxes.length) return 0
 		const pos = bisectLeft(this._maxes, value, this._cmp)
 		if (pos === this._maxes.length) return this._len
@@ -737,7 +737,7 @@ export abstract class AbstractSortedArray<T> {
 	 * @param value - Insertion index of value in SortedArray.
 	 * @returns Index.
 	 */
-	bisectRight(value: T): number {
+	bisectRight(value: C): number {
 		if (!this._maxes.length) return 0
 		const pos = bisectRight(this._maxes, value, this._cmp)
 		if (pos === this._maxes.length) return this._len
@@ -833,7 +833,7 @@ export abstract class AbstractSortedArray<T> {
 	 * @param end - The array index at which to end the search. If omitted, defaults to the end of the sorted container.
 	 * @returns The index of the first occurrence of `value` in the sorted container, or -1 if it is not present.
 	 */
-	indexOf(value: T, start = 0, end = this._len): number {
+	indexOf(value: C, start = 0, end = this._len): number {
 		if (!this._len) return -1
 
 		if (start < 0) start += this._len

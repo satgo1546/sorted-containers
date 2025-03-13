@@ -47,8 +47,9 @@ import { AbstractSortedArray, checkAbstractSortedArray } from './abstract-sorted
  * - {@link SortedArray#toString}
  *
  * @typeParam T - The element type.
+ * @typeParam C - Part of the element that the comparator function sees.
  */
-export class SortedArray<T> extends AbstractSortedArray<T> {
+export class SortedArray<T extends C, C = T> extends AbstractSortedArray<T, C> {
 	/**
 	 * Add `value` to SortedArray.
 	 *
@@ -178,7 +179,7 @@ export class SortedArray<T> extends AbstractSortedArray<T> {
 	}
 }
 
-export interface SortedArray<T> {
+export interface SortedArray<T, C> {
 	/**
 	 * Return true if `value` is an element of the SortedArray.
 	 *
@@ -189,13 +190,17 @@ export interface SortedArray<T> {
 	 * @param value - Search for value in SortedArray.
 	 * @returns True if `value` in SortedArray.
 	 */
-	includes(value: T): boolean
-	keys: () => ArrayIterator<T>
-	values: () => ArrayIterator<T>
+	includes(value: C): boolean
+
+	/**
+	 * Returns an iterable of values in the SortedArray.
+	 */
+	values(): ArrayIterator<T>
 }
 
 SortedArray.prototype[Symbol.toStringTag] = 'SortedArray'
 SortedArray.prototype.includes = AbstractSortedArray.prototype._has
+SortedArray.prototype.values = AbstractSortedArray.prototype[Symbol.iterator]
 
 /**
  * Check the invariants of a SortedArray.

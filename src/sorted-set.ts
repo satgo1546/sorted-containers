@@ -24,10 +24,11 @@ function iterableToSortedArraySet<T>(iterable: Iterable<T>, cmp: (a: T, b: T) =>
  * SortedSet values are maintained in sorted order.
  * The design of SortedSet is simple:
  * SortedSet is implemented as a SortedArray that prevents duplicates to be inserted.
+ * It does not use the native Set type at all.
  *
  * SortedSet values must have a total ordering.
  * They are compared using the provided comparator function only;
- * they do not need to be the same object to be considered equal.
+ * they do not have to be the same object to be considered equal.
  *
  * The total ordering of values must not change while they are stored in the SortedSet.
  *
@@ -80,8 +81,9 @@ function iterableToSortedArraySet<T>(iterable: Iterable<T>, cmp: (a: T, b: T) =>
  * - {@link SortedSet#toJSON}
  *
  * @typeParam T - The element type.
+ * @typeParam C - Part of the element that the comparator function sees.
  */
-export class SortedSet<T> extends AbstractSortedArray<T> {
+export class SortedSet<T extends C, C = T> extends AbstractSortedArray<T, C> {
 	/**
 	 * Initialize from an Array of sorted unique values.
 	 *
@@ -119,7 +121,7 @@ export class SortedSet<T> extends AbstractSortedArray<T> {
 	 * @param other - An iterable.
 	 * @returns true if all elements in the other set are also in this SortedSet, and false otherwise.
 	 */
-	isSupersetOf(other: Iterable<T>): boolean {
+	isSupersetOf(other: Iterable<C>): boolean {
 		for (const val of other) {
 			if (!this.has(val)) return false
 		}
@@ -165,7 +167,9 @@ export class SortedSet<T> extends AbstractSortedArray<T> {
 	 * Returns an iterable of `[value, value]` pairs for every `value` in the SortedSet.
 	 */
 	*entries(): SetIterator<[T, T]> {
-		for (const val of this) yield [val, val]
+		for (const sublist of this._lists) {
+			for (const val of sublist) yield [val, val]
+		}
 	}
 
 	/**
@@ -371,6 +375,8 @@ export class SortedSet<T> extends AbstractSortedArray<T> {
 	 *
 	 * @param other - An iterable. It does not have to be a Set-like.
 	 * @returns The union as a new SortedSet.
+	 *
+	 * @see {@link update} for an in-place version of this method.
 	 */
 	union(other: Iterable<T>): SortedSet<T> {
 		const ret = this.clone()
@@ -387,6 +393,8 @@ export class SortedSet<T> extends AbstractSortedArray<T> {
 	 * ss // SortedSet [1, 2, 3, 4, 5, 6, 7]
 	 *
 	 * @param other - An iterable.
+	 *
+	 * @see {@link union} for a similar method that returns a new SortedSet.
 	 */
 	update(other: Iterable<T>): void {
 		if (this._len) {
@@ -404,7 +412,7 @@ export class SortedSet<T> extends AbstractSortedArray<T> {
 	}
 }
 
-export interface SortedSet<T> {
+export interface SortedSet<T, C> {
 	/**
 	 * Return true if `value` is an element of the SortedSet.
 	 *
@@ -415,7 +423,7 @@ export interface SortedSet<T> {
 	 * @param value - Search for this value in the SortedSet.
 	 * @returns true if `value` is in the SortedSet.
 	 */
-	has(value: T): boolean
+	has(value: C): boolean
 
 	/**
 	 * Despite its name, returns an iterable of the values in the SortedSet.

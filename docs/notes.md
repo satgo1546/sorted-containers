@@ -209,7 +209,9 @@ It is doubtful that full compatibility with built-in objects is worth the troubl
 
 The comparison and key mechanisms in JavaScript are very different from Python.
 
-In Python, there are two ways to specify the order a list should sort its elements:
+### In Python
+
+There are two ways to specify the order a list should sort its elements in Python:
 
 - By providing `__lt__` and `__eq__` methods on the elements.
 - By providing a key function when calling `sort` on a list or constructing a SortedList.
@@ -307,6 +309,8 @@ As you see, key functions in Python are powerful.
 They are powerful because they enable succinct comparison delegation to parts of a compound object with the help of the built-in nicely sorted tuple type,
 while at the same time users always have an option to override `__lt__` and `__eq__` in case control is needed.
 
+## In JavaScript
+
 In contrast, JavaScript is really flawed in this respect.
 Since operators cannot be overloaded in JavaScript, a comparator function must be provided to sort an array.
 It is a well-known pitfall that `Array.prototype.sort` does not work out of the box on numeric arrays,
@@ -351,3 +355,65 @@ especially in library code where usage is not foreseen.
 
 Due to Map and Set’s incompetence,
 SortedMap and SortedSet have diverged in implementation from their Python counterpart.
+They do not use the native Map and Set *at all*.
+They implement all the lookup mechanisms with bisection in user land.
+Somehow it is not slow.
+
+## In TypeScript
+
+While TypeScript has to inherit everything JavaScript has, including the flaws,
+there is something TypeScript is better at than Python — well, types.
+
+When sortedcontainers first came out, type hints were not even a thing.
+It has not been able to get properly hinted over the years
+because it was not (to be fair, it could not have been) written in a typing-oriented style.
+(See [the longstanding issue](https://github.com/grantjenks/python-sortedcontainers/issues/68) for details.)
+The biggest obstacle is that SortedSet and SortedDict adapts its behavior
+according to whether a key function is passed in or not.
+In [sortedcontainers-stubs](https://github.com/h4l/sortedcontainers-stubs),
+it is solved by stub-only types SortedKeySet and SortedKeyDict.
+
+It is easier in TypeScript.
+As elements cannot be directly compared anyway, a SortedArray in JavaScript is in fact a SortedKeyList in Python.
+Since a comparator function checks only the key part of the operands,
+a partial object containing only the relevant part can be passed into lookup methods,
+instead of a full object of the element type.
+
+```ts
+const a = new SortedArray(
+  [
+    { id: 1, value: 'one' },
+    { id: 2, value: 'two' },
+    { id: 3, value: 'three' },
+  ],
+  { comparator: (a, b) => a.id - b.id },
+);
+a.bisectLeft({ id: 2 }) // 1
+// = a.bisect_key_left(2) in Python
+```
+
+Meanwhile, due to the structural nature of TypeScript,
+it does not complain if a full object is passed in.
+
+```ts
+const o = { id: 2, value: 'duo' }
+a.bisectLeft(o) // 1
+// = a.bisect_left(o) in Python
+```
+
+While the cause is somewhat unfortunate,
+it is nice to see two methods collapse into one naturally.
+This design allows sorted containers to adapt to a key-value model
+without enforcing and taking control over it,
+like other BST implementations out there do.
+
+To support such usage, sorted containers are generic over an element type `T`
+and an optional key type `C` that is a partial element.
+
+```ts
+declare class SortedArray<T extends C, C = T>
+```
+
+Et voilà!
+The TypeScript compiler is quite happy with this type despite its absurd look.
+It is able to infer the other type parameter given either of them.
