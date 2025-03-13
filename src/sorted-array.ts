@@ -123,6 +123,24 @@ export class SortedArray<T extends C, C = T> extends AbstractSortedArray<T, C> {
 	}
 
 	/**
+	 * Returns an iterable of integers ranging from 0 (inclusive) to the length of the SortedArray (exclusive).
+	 */
+	keys(): ArrayIterator<number> {
+		// Array(n) pre-allocates so Array(this._len).keys() is slower.
+		return Array.prototype.keys.call({ length: this._len })
+	}
+
+	/**
+	 * Returns an iterable of index-value pairs of elements in the SortedArray.
+	 */
+	*entries(): ArrayIterator<[number, T]> {
+		let idx = 0
+		for (const sublist of this._lists) {
+			for (const val of sublist) yield [idx++, val]
+		}
+	}
+
+	/**
 	 * The size of the SortedArray.
 	 */
 	get length(): number {

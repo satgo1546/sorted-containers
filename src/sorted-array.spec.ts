@@ -1604,6 +1604,22 @@ describe('JavaScript specialty', () => {
 		expect(slt.count(null)).toBe(66)
 	})
 
+	test('keys', () => {
+		const random = seedrandom('')
+		const slt = new SortedArray(Array.from({ length: 100 }, () => random()))
+		expect(Array.from(slt.keys())).toStrictEqual(Array.from({ length: 100 }, (_, i) => i))
+		slt.clear()
+		expect(Array.from(slt.keys())).toStrictEqual([])
+	})
+
+	test('entries', () => {
+		const slt = new SortedArray(
+			Array.from({ length: 100 }, (_, i) => i),
+			{ comparator: (a, b) => b - a, loadFactor: 17 },
+		)
+		expect(Array.from(slt.entries())).toStrictEqual(Array.from({ length: 100 }, (_, i) => [i, 99 - i]))
+	})
+
 	test('find', () => {
 		const slt = new SortedArray(Array.from({ length: 100 }, (_, i) => i * 2))
 		for (let i = 0; i < 100; i++) {
