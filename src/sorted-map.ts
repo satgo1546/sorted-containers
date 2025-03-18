@@ -91,7 +91,7 @@ function toEntries<K, V>(iterator: Iterator<{ key: K, value: V }>): IteratorObje
  *
  * {@link SortedMap#clear}
  * {@link SortedMap#pop}
- * {@link SortedMap#popAt}
+ * {@link SortedMap#popEntry}
  *
  * Methods for looking up items:
  *
@@ -443,14 +443,14 @@ export class SortedMap<K extends C, V, C = K> implements Map<K, V> {
 	 *
 	 * @example
 	 * const sd = new SortedMap([['a', 1], ['b', 2], ['c', 3]]);
-	 * sd.popAt() // ['c', 3]
-	 * sd.popAt(0) // ['a', 1]
-	 * sd.popAt(100) // undefined
+	 * sd.popEntry() // ['c', 3]
+	 * sd.popEntry(0) // ['a', 1]
+	 * sd.popEntry(100) // undefined
 	 *
 	 * @param index - Index of item (default -1).
 	 * @returns Key and value pair.
 	 */
-	popAt(index = -1): [K, V] | undefined {
+	popEntry(index = -1): [K, V] | undefined {
 		const item = this._list.pop(index)
 		return item ? [item.key, item.value] : undefined
 	}

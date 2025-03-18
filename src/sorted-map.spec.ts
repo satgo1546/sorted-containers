@@ -218,18 +218,18 @@ describe('SortedMap', () => {
 	test('popitem', () => {
 		const mapping: [string, number][] = Array.from('abcdefghijklmnopqrstuvwxyz', (val, pos) => [val, pos])
 		const temp = new SortedMap(mapping)
-		expect(temp.popAt()).toStrictEqual(['z', 25])
+		expect(temp.popEntry()).toStrictEqual(['z', 25])
 	})
 
 	test('popitem2', () => {
 		const temp = new SortedMap()
-		expect(temp.popAt()).toBeUndefined()
+		expect(temp.popEntry()).toBeUndefined()
 	})
 
 	test('popitem3', () => {
 		const mapping: [string, number][] = Array.from('abcdefghijklmnopqrstuvwxyz', (val, pos) => [val, pos])
 		const temp = new SortedMap(mapping)
-		expect(temp.popAt(0)).toStrictEqual(['a', 0])
+		expect(temp.popEntry(0)).toStrictEqual(['a', 0])
 	})
 
 	test('peekitem', () => {
