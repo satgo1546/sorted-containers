@@ -536,13 +536,13 @@ export abstract class AbstractSortedArray<T extends C, C = T> {
 	}
 
 	/**
-	 * Return an iterator that slices sorted container from `start` to `stop`.
+	 * Return an iterator that slices sorted container from `start` to `end`.
 	 *
-	 * The `start` and `stop` index are treated inclusive and exclusive, respectively.
+	 * The `start` and `end` index are treated inclusive and exclusive, respectively.
 	 *
 	 * A negative index will count back from the last item.
 	 *
-	 * Both `start` and `stop` default to `undefined` which is automatically inclusive of the beginning and end of the sorted container.
+	 * Both `start` and `end` default to `undefined` which is automatically inclusive of the beginning and end of the sorted container.
 	 *
 	 * When `reverse` is `true` the values are yielded from the iterator in reverse order; `reverse` defaults to `false`.
 	 *
@@ -555,7 +555,7 @@ export abstract class AbstractSortedArray<T extends C, C = T> {
 	 *
 	 * @param start - Start index (inclusive).
 	 * @param end - Stop index (exclusive).
-	 * @param reverse - Yield values in reverse order.
+	 * @param reverse - Whether to yield values in reverse order.
 	 * @returns Iterator.
 	 */
 	islice(start = 0, end = this._len, reverse = false): IteratorObject<T, undefined, unknown> {
@@ -652,7 +652,7 @@ export abstract class AbstractSortedArray<T extends C, C = T> {
 	 * @param maximum - Maximum value to stop iterating.
 	 * @param includeMinimum - Whether the minimum ought to be included in the range.
 	 * @param includeMaximum - Whether the maximum ought to be included in the range.
-	 * @param reverse - Yield values in reverse order.
+	 * @param reverse - Whether to yield values in reverse order.
 	 * @returns Iterator.
 	 */
 	irange(minimum?: C, maximum?: C, includeMinimum = true, includeMaximum = true, reverse = false): IteratorObject<T, undefined, unknown> {
@@ -712,10 +712,10 @@ export abstract class AbstractSortedArray<T extends C, C = T> {
 	 *
 	 * @example
 	 * const sl = new SortedArray([10, 11, 12, 13, 14]);
-	 * sl.bisect_left(12) // 2
+	 * sl.bisectLeft(12) // 2
 	 *
-	 * @param value - Insertion index of value in SortedArray.
-	 * @returns Index.
+	 * @param value - Value to find the insertion point of.
+	 * @returns Insertion index of `value` in the sorted container.
 	 */
 	bisectLeft(value: C): number {
 		if (!this._maxes.length) return 0
@@ -732,10 +732,10 @@ export abstract class AbstractSortedArray<T extends C, C = T> {
 	 *
 	 * @example
 	 * const sl = new SortedArray([10, 11, 12, 13, 14]);
-	 * sl.bisect_right(12) // 3
+	 * sl.bisectRight(12) // 3
 	 *
-	 * @param value - Insertion index of value in SortedArray.
-	 * @returns Index.
+	 * @param value - Value to find the insertion point of.
+	 * @returns Insertion index of `value` in the sorted container.
 	 */
 	bisectRight(value: C): number {
 		if (!this._maxes.length) return 0
