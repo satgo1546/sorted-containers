@@ -34,7 +34,7 @@ const [, benchSplayReadOnly, benchSplay] = makeStockAndBench('splaytree', () => 
 	return tree
 })
 const [, benchTreeMultiSetReadOnly, benchTreeMultiSet] = makeStockAndBench('jstreemap TreeMultiSet', () => {
-	let set = new TreeMultiSet<number>()
+	const set = new TreeMultiSet<number>()
 	for (const val of list) set.add(val)
 	return set
 })

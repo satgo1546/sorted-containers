@@ -24,6 +24,10 @@ SortedSet:
   A naïve implementation backed by an ordinary Set.
   Keys are sorted on demand.
   Note that Set does not support custom comparators and is thus limited to primitive keys.
+- **avl**:
+  It offers an option to disallow duplicate elements.
+- **splaytree**:
+  It offers a method to insert a value only if it is not in the tree.
 - **[bintrees](https://www.npmjs.com/package/bintrees) RBTree**:
 - **[jstreemap](https://kirusi.github.io/jstreemap/) TreeSet**:
 - **[js-sdsl](https://js-sdsl.org/) OrderedSet**:
@@ -31,7 +35,11 @@ SortedSet:
 
 SortedMap:
 
-- **[sorted-btree](https://www.npmjs.com/package/sorted-btree) BTree**:
+- **avl**, **splaytree** and **functional-red-black-tree**:
+  They allow keys to have associated values.
+- **[sorted-btree](https://www.npmjs.com/package/sorted-btree)**:
+  A real B-tree implementation.
+  It clamps maximum child count between 4 and 256, with a default value of 32.
 - **[jstreemap](https://kirusi.github.io/jstreemap/) TreeMap**:
 - **[js-sdsl](https://js-sdsl.org/) OrderedMap**:
 - **[collections SortedMap](https://www.collectionsjs.com/sorted-map)**:
