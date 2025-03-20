@@ -426,3 +426,72 @@ describe('SortedMap', () => {
 		expect(items.findIndex(([key, value]) => key === 'f' && value === 100)).toBe(-1)
 	})
 })
+
+describe('JavaScript specialty', () => {
+	test('NaN with default comparator', () => {
+		const sd = new SortedMap<number, undefined>(Array(100).fill([NaN]), { loadFactor: 17 })
+		expect(sd.size).toBe(1)
+		expect(Array.from(sd)).toStrictEqual([[NaN, undefined]])
+		expect(sd.has(NaN)).toBe(true)
+		expect(sd.indexOf(NaN)).toBe(0)
+	})
+
+	test('±0 with default comparator', () => {
+		const sd = new SortedMap(Array.from({ length: 100 }, (_, i) => [(i % 2 - .5) * 0, 'value']), { loadFactor: 17 })
+		expect(sd.size).toBe(1)
+		expect(Array.from(sd)).toStrictEqual([[-0, 'value']])
+		expect(Array.from(sd)).not.toStrictEqual([[0, 'value']])
+		expect(sd.has(0)).toBe(true)
+		expect(sd.has(-0)).toBe(true)
+	})
+
+	test('undefined and null', () => {
+		const sd = new SortedMap(
+			Array.from({ length: 100 }, (_, i) => [i % 3 ? null : undefined, 'value']),
+			{
+				comparator(a, b) {
+					const aStr = '' + a
+					const bStr = '' + b
+					return +(aStr > bStr) - +(aStr < bStr)
+				},
+				loadFactor: 17,
+			},
+		)
+		expect(sd.size).toBe(2)
+		expect(Array.from(sd)).toStrictEqual([[null, 'value'], [undefined, 'value']])
+		expect(sd.at(-3)).toBeUndefined()
+		expect(sd.at(-2)).toStrictEqual([null, 'value'])
+		expect(sd.at(-1)).toStrictEqual([undefined, 'value'])
+		expect(sd.at(0)).toStrictEqual([null, 'value'])
+		expect(sd.at(1)).toStrictEqual([undefined, 'value'])
+		expect(sd.at(2)).toBeUndefined()
+		expect(sd.at(3)).toBeUndefined()
+		expect(sd.has(undefined)).toBe(true)
+		expect(sd.has(null)).toBe(true)
+		expect(sd.indexOf(undefined)).toBe(1)
+		expect(sd.indexOf(null)).toBe(0)
+	})
+
+	test('equal keys’ identity', () => {
+		const ss = new SortedMap([['a', 'first'], ['b', 'second']], { comparator: () => 0 })
+		expect(ss.size).toBe(1)
+		expect(ss.at(0)).toStrictEqual(['a', 'second'])
+		expect(ss.get('b')).toBe('second')
+		ss.set('c', 'third')
+		expect(ss.size).toBe(1)
+		expect(ss.at(0)).toStrictEqual(['a', 'third'])
+		ss.update([['d', 'fourth']])
+		expect(ss.size).toBe(1)
+		expect(ss.at(0)).toStrictEqual(['a', 'fourth'])
+		ss.delete('e')
+		expect(ss.size).toBe(0)
+		ss.set('f', 'fifth')
+		expect(ss.size).toBe(1)
+		expect(ss.at(0)).toStrictEqual(['f', 'fifth'])
+		ss.clear()
+		expect(ss.size).toBe(0)
+		ss.update([['a', 'first'], ['b', 'second']])
+		expect(ss.size).toBe(1)
+		expect(ss.at(0)).toStrictEqual(['a', 'second'])
+	})
+})

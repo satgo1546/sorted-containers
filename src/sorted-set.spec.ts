@@ -691,4 +691,22 @@ describe('JavaScript specialty', () => {
 		expect(ss.count(undefined)).toBe(1)
 		expect(ss.count(null)).toBe(1)
 	})
+
+	test('equal objects’ identity', () => {
+		const a = { a: undefined }
+		const b = { b: undefined }
+		const ss = new SortedSet<unknown>([a, b], { comparator: () => 0 })
+		expect(ss.size).toBe(1)
+		expect(ss.at(0)).toBe(a)
+		expect(ss.find(b)).toBe(a)
+		ss.add(b)
+		expect(ss.size).toBe(1)
+		expect(ss.at(0)).toBe(a)
+		ss.update([b])
+		expect(ss.size).toBe(1)
+		expect(ss.at(0)).toBe(a)
+		ss.intersectionUpdate([b])
+		expect(ss.size).toBe(1)
+		expect(ss.at(0)).toBe(a)
+	})
 })

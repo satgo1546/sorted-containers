@@ -314,8 +314,16 @@ export class SortedSet<T extends C, C = T> extends AbstractSortedArray<T, C> {
 			}
 		} else {
 			for (const value of values) {
-				if (this.has(value)) {
-					result.push(value)
+				if (value === undefined) {
+					const index = this.indexOf(value)
+					if (index >= 0) {
+						result.push(this.at(index)!)
+					}
+				} else {
+					const thisValue = this.find(value)
+					if (thisValue) {
+						result.push(thisValue)
+					}
 				}
 			}
 		}
