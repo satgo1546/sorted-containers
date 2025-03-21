@@ -49,6 +49,7 @@ This section is mostly for reference.
   `index`|`indexOf`
   `items`|`entries`
   `peekitem`|`at`
+  `pop`|`shift`, `pop`, and `deleteAt`
   `popitem`|`popEntry`
   `setdefault`|`upsert` \*
   `symmetric_difference`|`symmetricDifference`

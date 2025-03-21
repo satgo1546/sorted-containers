@@ -372,21 +372,60 @@ export abstract class AbstractSortedArray<T extends C, C = T> {
 	}
 
 	/**
-	 * Remove value at `index` from sorted container.
+	 * Remove and return value at `index` in sorted container.
 	 *
-	 * If `index` is out of range, does nothing.
+	 * If the sorted container is empty or index is out of range, `undefined` is returned and the sorted container is not modified.
+	 *
+	 * Negative indices count back from the last item.
 	 *
 	 * @example
 	 * const sl = new SortedArray('abcde');
-	 * sl.deleteAt(2);
-	 * sl // SortedArray ['a', 'b', 'd', 'e']
+	 * sl.deleteAt(-1) // 'e'
+	 * sl.deleteAt(2) // 'c'
+	 * sl // SortedArray ['a', 'b', 'd']
 	 *
-	 * @param index - Integer or slice for indexing. Negative integers count back from the last item in the array.
+	 * @param index - Index of value. Negative integers count back from the last item in the array.
+	 * @returns The removed value or `undefined`.
 	 */
-	deleteAt(index: number): void {
+	deleteAt(index: number): T | undefined {
+		if (!this._len) return
+
+		if (index === 0) {
+			const val = this._lists[0][0]
+			this._delete(0, 0)
+			return val
+		}
+
+		if (index === -1) {
+			const pos = this._lists.length - 1
+			const loc = this._lists[pos].length - 1
+			const val = this._lists[pos][loc]
+			this._delete(pos, loc)
+			return val
+		}
+
+		if (index > 0 && index < this._lists[0].length) {
+			const val = this._lists[0][index]
+			this._delete(0, index)
+			return val
+		}
+
+		const lenLast = this._lists[this._lists.length - 1].length
+
+		if (index > -lenLast && index < 0) {
+			const pos = this._lists.length - 1
+			const loc = lenLast + index
+			const val = this._lists[pos][loc]
+			this._delete(pos, loc)
+			return val
+		}
+
 		if (index < -this._len || index >= this._len) return
+
 		const [pos, idx] = this._pos(index)
+		const val = this._lists[pos][idx]
 		this._delete(pos, idx)
+		return val
 	}
 
 	/**
@@ -771,60 +810,35 @@ export abstract class AbstractSortedArray<T extends C, C = T> {
 	}
 
 	/**
-	 * Remove and return value at `index` in sorted container.
+	 * Remove the first element from the sorted container and return it.
+	 * If the sorted container is empty, undefined is returned and the sorted container is not modified.
 	 *
-	 * If the sorted container is empty or index is out of range, `undefined` is returned and the sorted container is not modified.
+	 * @example
+	 * const sl = new SortedArray('abcde');
+	 * sl.shift() // 'a'
+	 * sl.shift() // 'b'
+	 * sl // SortedArray ['c', 'd', 'e']
 	 *
-	 * Negative indices count back from the last item.
+	 * @returns Shifted value or undefined.
+	 */
+	shift(): T | undefined {
+		return this.deleteAt(0)
+	}
+
+	/**
+	 * Remove the last element from the sorted container and return it.
+	 * If the sorted container is empty, undefined is returned and the sorted container is not modified.
 	 *
 	 * @example
 	 * const sl = new SortedArray('abcde');
 	 * sl.pop() // 'e'
-	 * sl.pop(2) // 'c'
-	 * sl // SortedArray ['a', 'b', 'd']
+	 * sl.pop() // 'd'
+	 * sl // SortedArray ['a', 'b', 'c']
 	 *
-	 * @param index - Index of value (default -1).
-	 * @returns Value or `undefined`.
+	 * @returns Popped value or undefined.
 	 */
-	pop(index = -1): T | undefined {
-		if (!this._len) return
-
-		if (index === 0) {
-			const val = this._lists[0][0]
-			this._delete(0, 0)
-			return val
-		}
-
-		if (index === -1) {
-			const pos = this._lists.length - 1
-			const loc = this._lists[pos].length - 1
-			const val = this._lists[pos][loc]
-			this._delete(pos, loc)
-			return val
-		}
-
-		if (index > 0 && index < this._lists[0].length) {
-			const val = this._lists[0][index]
-			this._delete(0, index)
-			return val
-		}
-
-		const lenLast = this._lists[this._lists.length - 1].length
-
-		if (index > -lenLast && index < 0) {
-			const pos = this._lists.length - 1
-			const loc = lenLast + index
-			const val = this._lists[pos][loc]
-			this._delete(pos, loc)
-			return val
-		}
-
-		if (index < -this._len || index >= this._len) return
-
-		const [pos, idx] = this._pos(index)
-		const val = this._lists[pos][idx]
-		this._delete(pos, idx)
-		return val
+	pop(): T | undefined {
+		return this.deleteAt(-1)
 	}
 
 	/**

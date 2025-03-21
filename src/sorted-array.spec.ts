@@ -423,24 +423,24 @@ describe('SortedArray', () => {
 		checkSortedArray(slt)
 		expect(slt.pop()).toBe(9)
 		checkSortedArray(slt)
-		expect(slt.pop(0)).toBe(0)
+		expect(slt.shift()).toBe(0)
 		checkSortedArray(slt)
-		expect(slt.pop(-2)).toBe(7)
+		expect(slt.deleteAt(-2)).toBe(7)
 		checkSortedArray(slt)
-		expect(slt.pop(4)).toBe(5)
+		expect(slt.deleteAt(4)).toBe(5)
 		checkSortedArray(slt)
-		expect(slt.pop(1)).toBe(2)
+		expect(slt.deleteAt(1)).toBe(2)
 		checkSortedArray(slt)
 	})
 
 	test('pop_indexerror1', () => {
 		let slt = new SortedArray(range(10), { loadFactor: 4 })
-		expect(slt.pop(-11)).toBeUndefined()
+		expect(slt.deleteAt(-11)).toBeUndefined()
 	})
 
 	test('pop_indexerror2', () => {
 		let slt = new SortedArray(range(10), { loadFactor: 4 })
-		expect(slt.pop(10)).toBeUndefined()
+		expect(slt.deleteAt(10)).toBeUndefined()
 	})
 
 	test('pop_indexerror3', () => {
@@ -703,7 +703,7 @@ describe('SortedArray modulo 10', () => {
 		const slt = new SortedArray(range(20), { comparator: moduloComparator, loadFactor: 4 })
 		checkSortedArray(slt)
 		for (const val of range(20)) {
-			slt.deleteAt(0)
+			slt.shift()
 			checkSortedArray(slt)
 		}
 		expect(slt.length).toBe(0)
@@ -987,20 +987,20 @@ describe('SortedArray modulo 10', () => {
 		checkSortedArray(slt)
 		expect(slt.pop()).toBe(9)
 		checkSortedArray(slt)
-		expect(slt.pop(0)).toBe(0)
+		expect(slt.shift()).toBe(0)
 		checkSortedArray(slt)
-		expect(slt.pop(-2)).toBe(7)
+		expect(slt.deleteAt(-2)).toBe(7)
 		checkSortedArray(slt)
-		expect(slt.pop(4)).toBe(5)
+		expect(slt.deleteAt(4)).toBe(5)
 		checkSortedArray(slt)
-		expect(slt.pop(1)).toBe(2)
+		expect(slt.deleteAt(1)).toBe(2)
 		checkSortedArray(slt)
 	})
 
 	test('pop throws', () => {
 		const slt = new SortedArray(range(10), { comparator: moduloComparator, loadFactor: 4 })
-		expect(slt.pop(-11)).toBeUndefined()
-		expect(slt.pop(10)).toBeUndefined()
+		expect(slt.deleteAt(-11)).toBeUndefined()
+		expect(slt.deleteAt(10)).toBeUndefined()
 	})
 
 	test('indexOf', () => {
@@ -1472,20 +1472,20 @@ describe('SortedArray negate', () => {
 		checkSortedArray(slt)
 		expect(slt.pop()).toBe(0)
 		checkSortedArray(slt)
-		expect(slt.pop(0)).toBe(9)
+		expect(slt.shift()).toBe(9)
 		checkSortedArray(slt)
-		expect(slt.pop(-2)).toBe(2)
+		expect(slt.deleteAt(-2)).toBe(2)
 		checkSortedArray(slt)
-		expect(slt.pop(4)).toBe(4)
+		expect(slt.deleteAt(4)).toBe(4)
 		checkSortedArray(slt)
-		expect(slt.pop(1)).toBe(7)
+		expect(slt.deleteAt(1)).toBe(7)
 		checkSortedArray(slt)
 	})
 
 	test('pop errors', () => {
 		const slt = new SortedArray(range(10), { comparator: negateComparator, loadFactor: 4 })
-		expect(slt.pop(-11)).toBeUndefined()
-		expect(slt.pop(10)).toBeUndefined()
+		expect(slt.deleteAt(-11)).toBeUndefined()
+		expect(slt.deleteAt(10)).toBeUndefined()
 		slt.clear()
 		expect(slt.pop()).toBeUndefined()
 	})

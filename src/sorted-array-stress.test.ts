@@ -154,7 +154,7 @@ const actions = {
 	stressPop(slt: SortedArray<number>) {
 		notEmpty(slt)
 		const pos = Math.floor(random() * slt.length) + 1
-		expect(slt.at(-pos)).toBe(slt.pop(-pos))
+		expect(slt.at(-pos)).toBe(slt.deleteAt(-pos))
 	},
 
 	stressIndex(slt: SortedArray<number>) {

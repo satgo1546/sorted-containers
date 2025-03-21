@@ -451,7 +451,7 @@ export class SortedMap<K extends C, V, C = K> implements Map<K, V> {
 	 * @returns Key and value pair.
 	 */
 	popEntry(index = -1): [K, V] | undefined {
-		const item = this._list.pop(index)
+		const item = this._list.deleteAt(index)
 		return item ? [item.key, item.value] : undefined
 	}
 

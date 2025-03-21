@@ -567,7 +567,7 @@ describe('SortedSet', () => {
 	test('pop', () => {
 		const temp = new SortedSet(Array.from({ length: 100 }, (_, i) => i), { loadFactor: 7 })
 		temp.pop()
-		temp.pop(0)
+		temp.shift()
 		for (let val = 0; val < 98; val++) {
 			expect(temp.at(val)).toBe(val + 1)
 		}
