@@ -62,7 +62,7 @@ export class SortedArray<T extends C, C = T> extends AbstractSortedArray<T, C> {
 	 *
 	 * @param value - Value to add to SortedArray.
 	 */
-	add(value: T): this {
+	add(value: T): void {
 		if (this._maxes.length) {
 			let pos = bisectRight(this._maxes, value, this._cmp)
 
@@ -81,7 +81,6 @@ export class SortedArray<T extends C, C = T> extends AbstractSortedArray<T, C> {
 		}
 
 		this._len++
-		return this
 	}
 
 	update(iterable: Iterable<T>): void {

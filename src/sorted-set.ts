@@ -173,7 +173,7 @@ export class SortedSet<T extends C, C = T> extends AbstractSortedArray<T, C> {
 	}
 
 	/**
-	 * Add `value` to SortedSet.
+	 * Add `value` to SortedSet if it does not already exist.
 	 *
 	 * @example
 	 * const ss = new SortedSet();
@@ -184,7 +184,7 @@ export class SortedSet<T extends C, C = T> extends AbstractSortedArray<T, C> {
 	 *
 	 * @param value - Value to add to the SortedSet.
 	 */
-	add(value: T): this {
+	add(value: T): void {
 		if (this._len) {
 			let pos = bisectLeft(this._maxes, value, this._cmp)
 
@@ -193,9 +193,10 @@ export class SortedSet<T extends C, C = T> extends AbstractSortedArray<T, C> {
 				this._lists[pos].push(value)
 				this._maxes[pos] = value
 			} else {
-				const idx = bisectLeft(this._lists[pos], value, this._cmp)
-				if (!this._cmp(this._lists[pos][idx], value)) return this
-				this._lists[pos].splice(idx, 0, value)
+				const sublist = this._lists[pos]
+				const idx = bisectLeft(sublist, value, this._cmp)
+				if (!this._cmp(sublist[idx], value)) return
+				sublist.splice(idx, 0, value)
 			}
 
 			this._expand(pos)
@@ -205,7 +206,6 @@ export class SortedSet<T extends C, C = T> extends AbstractSortedArray<T, C> {
 		}
 
 		this._len++
-		return this
 	}
 
 	/**
