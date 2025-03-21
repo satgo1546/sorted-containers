@@ -9,6 +9,7 @@ const BTree: typeof BTreeModule = BTreeModule['default']
 import { TreeMap } from 'jstreemap'
 import { OrderedMap } from 'js-sdsl'
 import CollectionsSortedMap from 'collections/sorted-map.js'
+import { bisectLeft, bisectRight } from './bisect.ts'
 
 const random = seedrandom('')
 const list = Array.from({ length: 1000000 }, (_, i) => i)
@@ -62,7 +63,7 @@ const [, benchOrderedMapReadOnly, benchOrderedMap] = makeStockAndBench('js-sdsl 
 	return map
 })
 const [, benchCollectionsSortedMapReadOnly, benchCollectionsSortedMap] = makeStockAndBench('collections.js SortedMap', () => {
-	const map = new CollectionsSortedMap()
+	const map: any = new CollectionsSortedMap()
 	for (const val of list) map.set(val, -val)
 	return map
 })
@@ -308,6 +309,66 @@ describe('iterate over all key-value pairs', () => {
 	benchCollectionsSortedMapReadOnly(map => {
 		let sum = 0
 		map.forEach((v, k) => sum += k - v)
+		return sum
+	})
+})
+
+describe('iterate over keys between 499500 and 500500', () => {
+	benchSortedMapReadOnly(slt => {
+		let sum = 0
+		for (const k of slt.irange(499500, 500500)) sum += k - slt.get(k)!
+		return sum
+	})
+
+	benchMapReadOnly(map => {
+		const keys = Array.from(map.keys()).sort((a, b) => a - b)
+		const l = bisectLeft(keys, 499500, (a, b) => a - b)
+		const r = bisectRight(keys, 500500, (a, b) => a - b)
+		let sum = 0
+		for (let i = l; i < r; i++) sum += keys[i] - map.get(keys[i])!
+		return sum
+	})
+
+	benchAVLReadOnly(tree => {
+		let sum = 0
+		tree.range(499500, 500500, ({ key, data }) => { sum += key - data! })
+		return sum
+	})
+
+	benchSplayReadOnly(tree => {
+		let sum = 0
+		tree.range(499500, 500500, ({ key,data }) => { sum += key-data })
+		return sum
+	})
+
+	benchFunctionalRedBlackTree(tree => {
+		let sum = 0
+		tree.forEach((k, v) => { sum += k - v }, 499500, 500501)
+		return sum
+	})
+
+	benchBTreeReadOnly(tree => {
+		let sum = 0
+		tree.forRange(499500, 500500, true, (k,v)=>sum+=k-v)
+		return sum
+	})
+
+	benchTreeMapReadOnly(map => {
+		let sum = 0
+		const end = map.upperBound(500500)
+		for (const it = map.lowerBound(499500); !it.equals(end); it.next()) {
+			sum += it.key - it.value
+		}
+		return sum
+	})
+
+	benchOrderedMapReadOnly(map => {
+		let sum = 0
+		const end = map.upperBound(500500)
+		for (const it = map.lowerBound(499500); !it.equals(end); it.next()) {
+			const [k, v] = it.pointer
+			sum += k - v
+		}
 		return sum
 	})
 })
