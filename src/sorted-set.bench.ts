@@ -4,6 +4,8 @@ import { SortedSet } from './sorted-set.ts'
 import { bisectLeft, bisectRight } from './bisect.ts'
 import { AVLTree } from 'avl'
 import SplayTree from 'splaytree'
+import BTreeModule from 'sorted-btree'
+const BTree: typeof BTreeModule = BTreeModule['default']
 import { RBTree } from 'bintrees'
 import { TreeSet } from 'jstreemap'
 import { OrderedSet } from 'js-sdsl'
@@ -34,6 +36,11 @@ const [, benchAVLReadOnly, benchAVL] = makeStockAndBench('avl', () => {
 const [, benchSplayReadOnly, benchSplay] = makeStockAndBench('splaytree', () => {
 	const tree = new SplayTree<number>()
 	for (const val of list) tree.add(val)
+	return tree
+})
+const [, benchBTreeReadOnly, benchBTree] = makeStockAndBench('sorted-btree', () => {
+	const tree = new BTree<number, undefined>()
+	for (const val of list) tree.set(val, undefined)
 	return tree
 })
 const [, benchRBTreeReadOnly, benchRBTree] = makeStockAndBench('bintrees RBTree', () => {
@@ -75,6 +82,11 @@ describe('initialize with 1,000,000 elements', () => {
 	benchSplayReadOnly(() => {
 		const tree = new SplayTree()
 		for (const val of list) tree.add(val)
+		return tree.size
+	})
+	benchBTreeReadOnly(() => {
+		const tree = new BTree<number, undefined>()
+		for (const val of list) tree.set(val, undefined)
 		return tree.size
 	})
 	benchRBTreeReadOnly(() => {
@@ -121,6 +133,11 @@ for (const [description, values] of Object.entries({
 
 	benchSplay(tree => {
 		for (const val of values) tree.add(val)
+		return tree.size
+	})
+
+	benchBTree(tree => {
+		for (const val of values) tree.set(val, undefined)
 		return tree.size
 	})
 
@@ -177,6 +194,11 @@ for (const [description, values] of Object.entries({
 		return tree.size
 	})
 
+	benchBTree(tree => {
+		for (const val of values) tree.delete(val)
+		return tree.size
+	})
+
 	benchRBTree(tree => {
 		for (const val of values) tree.remove(val)
 		return tree.size
@@ -228,7 +250,15 @@ describe('pop 1000 times', () => {
 	benchSplay(tree => {
 		for (let i = 0; i < 1000; i++) {
 			const max = tree.max()
-			if (max) tree.remove(max)
+			if (max !== null) tree.remove(max)
+		}
+		return tree.size
+	})
+
+	benchBTree(tree => {
+		for (let i = 0; i < 1000; i++) {
+			const max = tree.maxKey()
+			if (max !== undefined) tree.delete(max)
 		}
 		return tree.size
 	})
@@ -236,7 +266,7 @@ describe('pop 1000 times', () => {
 	benchRBTree(tree => {
 		for (let i = 0; i < 1000; i++) {
 			const max = tree.max()
-			if (max) tree.remove(max)
+			if (max !== null) tree.remove(max)
 		}
 		return tree.size
 	})
@@ -287,6 +317,13 @@ describe('iterate over all elements', () => {
 	benchSplayReadOnly(tree => {
 		let sum = 0
 		for (const { key } of tree) sum += key
+		return sum
+	})
+
+	benchBTreeReadOnly(tree => {
+		let sum = 0
+		// @ts-ignore
+		for (const [key] of tree) sum += key
 		return sum
 	})
 
@@ -352,6 +389,12 @@ describe('iterate over elements between 499500 and 500500', () => {
 		return sum
 	})
 
+	benchBTreeReadOnly(tree => {
+		let sum = 0
+		tree.forRange(499500, 500500, true, val => sum += val)
+		return sum
+	})
+
 	benchRBTreeReadOnly(tree => {
 		let sum = 0
 		const it = tree.lowerBound(499500)
@@ -413,6 +456,12 @@ describe('test for 2000 elements about half of which are nonexistent', () => {
 		return sum
 	})
 
+	benchBTreeReadOnly(tree => {
+		let sum = 0
+		for (const val of values) if (tree.has(val)) sum++
+		return sum
+	})
+
 	benchRBTreeReadOnly(tree => {
 		let sum = 0
 		for (const val of values) if (tree.find(val) !== null) sum++
@@ -444,6 +493,7 @@ describe('convert to Array', () => {
 	benchSetReadOnly(set => Array.from(set).sort((a, b) => a - b).length)
 	benchAVLReadOnly(tree => tree.keys().length)
 	benchSplayReadOnly(tree => tree.keys().length)
+	benchBTreeReadOnly(tree => tree.keysArray().length)
 	benchRBTreeReadOnly(tree => {
 		const arr: number[] = []
 		tree.each(val => arr.push(val))
