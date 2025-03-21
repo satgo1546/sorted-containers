@@ -436,18 +436,23 @@ export interface SortedSet<T, C> {
 	/**
 	 * Despite its name, returns an iterable of the values in the SortedSet.
 	 */
-	keys: () => SetIterator<T>
+	keys(): SetIterator<T>
 
 	/**
 	 * Returns an iterable of values in the SortedSet.
 	 */
-	values: () => SetIterator<T>
+	values(): SetIterator<T>
+
+	/**
+	 * An alias for {@link values}.
+	 */
+	[Symbol.iterator](): ArrayIterator<T>
 }
 
 SortedSet.prototype[Symbol.toStringTag] = 'SortedSet'
 SortedSet.prototype.has = AbstractSortedArray.prototype._has
-SortedSet.prototype.keys = SortedSet.prototype.values
-	= AbstractSortedArray.prototype[Symbol.iterator]
+SortedSet.prototype.keys = SortedSet.prototype.values = SortedSet.prototype[Symbol.iterator]
+	= AbstractSortedArray.prototype._iter
 
 /**
  * Check the invariants of a SortedSet.

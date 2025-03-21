@@ -34,6 +34,12 @@ export interface SortedArrayConstructorOptions<T> {
 	loadFactor?: number,
 }
 
+/**
+ * A very leaky abstraction (if it can be called an abstraction at all) just meant to share code,
+ * because it is painful to get decent method delegation in JavaScript.
+ *
+ * You should not be using it directly.
+ */
 export abstract class AbstractSortedArray<T extends C, C = T> {
 	static DEFAULT_LOAD_FACTOR = 1000
 	/** @internal */
@@ -120,7 +126,7 @@ export abstract class AbstractSortedArray<T extends C, C = T> {
 	 *
 	 * @param iterable - Iterable of values to add.
 	 */
-	abstract update(iterable: Iterable<T>): void
+	abstract update(iterable: Iterable<any>): void
 
 	/**
 	 * Return true if `value` is an element of the sorted container.
@@ -557,7 +563,7 @@ export abstract class AbstractSortedArray<T extends C, C = T> {
 	 *
 	 * Iterating a sorted container while adding or deleting elements may throw an error or silently fail to iterate over all elements.
 	 */
-	[Symbol.iterator](): IteratorObject<T, undefined, unknown> {
+	_iter(): IteratorObject<T, undefined, unknown> {
 		if (!this._len) return [][Symbol.iterator]()
 		const maxPos = this._lists.length - 1
 		return this._islice(0, 0, maxPos, this._lists[maxPos].length, false)

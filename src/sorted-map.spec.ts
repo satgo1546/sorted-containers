@@ -72,7 +72,7 @@ describe('SortedMap', () => {
 	test('iter', () => {
 		const mapping: [string, number][] = Array.from('abcdefghijklmnopqrstuvwxyz', (val, pos) => [val, pos])
 		const temp = new SortedMap(mapping)
-		expect([...temp.keys()]).toStrictEqual(Array.from('abcdefghijklmnopqrstuvwxyz'))
+		expect(Array.from(temp)).toStrictEqual(mapping)
 	})
 
 	test('iter_key', () => {

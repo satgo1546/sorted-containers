@@ -213,11 +213,16 @@ export interface SortedArray<T, C> {
 	 * Returns an iterable of values in the SortedArray.
 	 */
 	values(): ArrayIterator<T>
+
+	/**
+	 * An alias for {@link values}.
+	 */
+	[Symbol.iterator](): ArrayIterator<T>
 }
 
 SortedArray.prototype[Symbol.toStringTag] = 'SortedArray'
 SortedArray.prototype.includes = AbstractSortedArray.prototype._has
-SortedArray.prototype.values = AbstractSortedArray.prototype[Symbol.iterator]
+SortedArray.prototype.values = SortedArray.prototype[Symbol.iterator] = AbstractSortedArray.prototype._iter
 
 /**
  * Check the invariants of a SortedArray.
