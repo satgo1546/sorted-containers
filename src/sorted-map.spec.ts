@@ -84,22 +84,24 @@ describe('SortedMap', () => {
 	})
 
 	test('islice', () => {
-		const mapping: [string, number][] = Array.from('abcdefghijklmnopqrstuvwxyz', (val, pos) => [val, pos])
+		const keys = Array.from('abcdefghijklmnopqrstuvwxyz')
+		const mapping: [string, number][] = Array.from(keys, (val, pos) => [val, pos])
 		const temp = new SortedMap(mapping, { loadFactor: 7 })
 		for (let start = 0; start < 30; start++) {
 			for (let stop = 0; stop < 30; stop++) {
-				expect([...temp.islice(start, stop)]).toStrictEqual(mapping.slice(start, stop))
+				expect([...temp.islice(start, stop)]).toStrictEqual(keys.slice(start, stop))
 			}
 		}
 	})
 
 	test('irange', () => {
-		const mapping: [string, number][] = Array.from('abcdefghijklmnopqrstuvwxyz', (val, pos) => [val, pos])
+		const keys = Array.from('abcdefghijklmnopqrstuvwxyz')
+		const mapping: [string, number][] = Array.from(keys, (val, pos) => [val, pos])
 		const temp = new SortedMap(mapping, { loadFactor: 7 })
 		for (let start = 0; start < 26; start++) {
 			for (let stop = start + 1; stop < 26; stop++) {
-				const result = mapping.slice(start, stop)
-				expect(Array.from(temp.irange(result[0][0], result[result.length - 1][0]))).toStrictEqual(result)
+				const result = keys.slice(start, stop)
+				expect(Array.from(temp.irange(result[0], result[result.length - 1]))).toStrictEqual(result)
 			}
 		}
 	})
@@ -109,7 +111,7 @@ describe('SortedMap', () => {
 			Array.from({ length: 100 }, (_, val) => [val, val]),
 			{ comparator: moduloComparator, loadFactor: 7 },
 		)
-		const values = Array.from({ length: 10 }, (_, val) => [val, val + 90])
+		const values = Array.from({ length: 10 }, (_, val) => val)
 		for (let start = 0; start < 10; start++) {
 			for (let stop = start; stop < 10; stop++) {
 				const result = Array.from(temp.irange(start, stop))
@@ -205,14 +207,25 @@ describe('SortedMap', () => {
 	test('pop', () => {
 		const mapping: [string, number][] = Array.from('abcdefghijklmnopqrstuvwxyz', (val, pos) => [val, pos])
 		const temp = new SortedMap(mapping)
-		expect(temp.pop('a')).toBe(0)
-		expect(temp.pop('a', -1)).toBe(-1)
+		expect(temp.popKey('a')).toBe(0)
+		expect(temp.popKey('a', -1)).toBe(-1)
 	})
 
 	test('pop2', () => {
 		const mapping: [string, number][] = Array.from('abcdefghijklmnopqrstuvwxyz', (val, pos) => [val, pos])
 		const temp = new SortedMap(mapping)
-		expect(temp.pop('A')).toBeUndefined()
+		expect(temp.popKey('A')).toBeUndefined()
+	})
+
+	test('deleteSlice', () => {
+		const mapping: [string, number][] = Array.from('abcdefghijklmnopqrstuvwxyz', (val, pos) => [val, pos])
+		const temp = new SortedMap(mapping, { loadFactor: 4 })
+		temp.deleteSlice(12, 14)
+		checkSortedMap(temp)
+		expect(Array.from(temp)).toStrictEqual(Array.from('abcdefghijklopqrstuvwxyz', val => [val, val.charCodeAt(0) - 97]))
+		temp.deleteSlice(2, -2)
+		checkSortedMap(temp)
+		expect(Array.from(temp)).toStrictEqual([['a', 0], ['b', 1], ['y', 24], ['z', 25]])
 	})
 
 	test('popitem', () => {
@@ -235,9 +248,9 @@ describe('SortedMap', () => {
 	test('peekitem', () => {
 		const mapping: [string, number][] = Array.from('abcdefghijklmnopqrstuvwxyz', (val, pos) => [val, pos])
 		const temp = new SortedMap(mapping)
-		expect(temp.at()).toStrictEqual(['z', 25])
-		expect(temp.at(0)).toStrictEqual(['a', 0])
-		expect(temp.at(4)).toStrictEqual(['e', 4])
+		expect(temp.entryAt(-1)).toStrictEqual(['z', 25])
+		expect(temp.entryAt(0)).toStrictEqual(['a', 0])
+		expect(temp.entryAt(4)).toStrictEqual(['e', 4])
 	})
 
 	test('peekitem2', () => {
@@ -459,13 +472,13 @@ describe('JavaScript specialty', () => {
 		)
 		expect(sd.size).toBe(2)
 		expect(Array.from(sd)).toStrictEqual([[null, 'value'], [undefined, 'value']])
-		expect(sd.at(-3)).toBeUndefined()
-		expect(sd.at(-2)).toStrictEqual([null, 'value'])
-		expect(sd.at(-1)).toStrictEqual([undefined, 'value'])
-		expect(sd.at(0)).toStrictEqual([null, 'value'])
-		expect(sd.at(1)).toStrictEqual([undefined, 'value'])
-		expect(sd.at(2)).toBeUndefined()
-		expect(sd.at(3)).toBeUndefined()
+		expect(sd.entryAt(-3)).toBeUndefined()
+		expect(sd.entryAt(-2)).toStrictEqual([null, 'value'])
+		expect(sd.entryAt(-1)).toStrictEqual([undefined, 'value'])
+		expect(sd.entryAt(0)).toStrictEqual([null, 'value'])
+		expect(sd.entryAt(1)).toStrictEqual([undefined, 'value'])
+		expect(sd.entryAt(2)).toBeUndefined()
+		expect(sd.entryAt(3)).toBeUndefined()
 		expect(sd.has(undefined)).toBe(true)
 		expect(sd.has(null)).toBe(true)
 		expect(sd.indexOf(undefined)).toBe(1)
@@ -475,23 +488,23 @@ describe('JavaScript specialty', () => {
 	test('equal keys’ identity', () => {
 		const ss = new SortedMap([['a', 'first'], ['b', 'second']], { comparator: () => 0 })
 		expect(ss.size).toBe(1)
-		expect(ss.at(0)).toStrictEqual(['a', 'second'])
+		expect(ss.entryAt(0)).toStrictEqual(['a', 'second'])
 		expect(ss.get('b')).toBe('second')
 		ss.set('c', 'third')
 		expect(ss.size).toBe(1)
-		expect(ss.at(0)).toStrictEqual(['a', 'third'])
+		expect(ss.entryAt(0)).toStrictEqual(['a', 'third'])
 		ss.update([['d', 'fourth']])
 		expect(ss.size).toBe(1)
-		expect(ss.at(0)).toStrictEqual(['a', 'fourth'])
+		expect(ss.entryAt(0)).toStrictEqual(['a', 'fourth'])
 		ss.delete('e')
 		expect(ss.size).toBe(0)
 		ss.set('f', 'fifth')
 		expect(ss.size).toBe(1)
-		expect(ss.at(0)).toStrictEqual(['f', 'fifth'])
+		expect(ss.entryAt(0)).toStrictEqual(['f', 'fifth'])
 		ss.clear()
 		expect(ss.size).toBe(0)
 		ss.update([['a', 'first'], ['b', 'second']])
 		expect(ss.size).toBe(1)
-		expect(ss.at(0)).toStrictEqual(['a', 'second'])
+		expect(ss.entryAt(0)).toStrictEqual(['a', 'second'])
 	})
 })

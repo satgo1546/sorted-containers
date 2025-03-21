@@ -297,7 +297,8 @@ describe('iterate over all key-value pairs', () => {
 
 	benchBTreeReadOnly(tree => {
 		let sum = 0
-		for (const [k, v] of tree as unknown as Iterable<[number, number]>) sum += k - v
+		// @ts-ignore
+		for (const [k, v] of tree.entries(undefined, [undefined, undefined])) sum += k - v
 		return sum
 	})
 

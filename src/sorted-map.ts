@@ -1,6 +1,6 @@
 import { assert, defaultComparator, IteratorPrototype } from './common.ts'
-import { SortedArray } from './sorted-array.ts'
-import { checkAbstractSortedArray, type SortedArrayConstructorOptions } from './abstract-sorted-array.ts'
+import { AbstractSortedArray, checkAbstractSortedArray, type SortedArrayConstructorOptions } from './abstract-sorted-array.ts'
+import { bisectLeft } from './bisect.ts'
 
 /**
  * Map an iterator of key-value objects to an iterator of keys.
@@ -121,9 +121,9 @@ function toEntries<K, V>(iterator: Iterator<{ key: K, value: V }>): IteratorObje
  * @typeParam V - The type of values.
  * @typeParam C - Part of the key that the comparator function sees.
  */
-export class SortedMap<K extends C, V, C = K> implements Map<K, V> {
+export class SortedMap<K extends C, V, C = K> extends AbstractSortedArray<K, C> implements Map<K, V> {
 	/** @internal */
-	_list: SortedArray<{ key: K, value: V }, { key: C }>
+	_map: Map<K, V>
 
 	/**
 	 * Initialize a SortedMap instance, optionally with the given key-value pairs.
@@ -144,11 +144,8 @@ export class SortedMap<K extends C, V, C = K> implements Map<K, V> {
 	 * @param options - An object that specifies characteristics about the sorted container.
 	 */
 	constructor(iterable?: Iterable<[K, V]>, options?: SortedArrayConstructorOptions<C>) {
-		const cmp = options?.comparator ?? defaultComparator
-		this._list = new SortedArray(undefined, {
-			comparator: (a, b) => cmp(a.key, b.key),
-			loadFactor: options?.loadFactor,
-		})
+		super(undefined, options)
+		this._map = new Map
 		if (iterable) {
 			this.update(iterable)
 		}
@@ -158,14 +155,7 @@ export class SortedMap<K extends C, V, C = K> implements Map<K, V> {
 	 * @returns The number of entries in the SortedMap.
 	 */
 	get size(): number {
-		return this._list.length
-	}
-
-	/**
-	 * @returns A boolean value indicating whether an entry with the specified key exists or not.
-	 */
-	has(key: C): boolean {
-		return this._list.includes({ key })
+		return this._len
 	}
 
 	/**
@@ -177,10 +167,11 @@ export class SortedMap<K extends C, V, C = K> implements Map<K, V> {
 	 * If neither an entry is found nor a default value is provided, undefined is returned.
 	 */
 	get(key: C): V | undefined
-	get(key: C, defaultValue: V): V
-	get(key: C, defaultValue?: V): V | undefined {
-		const item = this._list.find({ key })
-		return item ? item.value : defaultValue
+	get<R>(key: C, defaultValue: R): V | R
+	get(key: C, defaultValue?: unknown): unknown {
+		if (this._map.has(key as K)) return this._map.get(key as K)!
+		if (this.has(key)) return this._map.get(this.find(key)!)!
+		return defaultValue
 	}
 
 	/**
@@ -198,179 +189,88 @@ export class SortedMap<K extends C, V, C = K> implements Map<K, V> {
 	 * @param value - Value for entry.
 	 */
 	set(key: K, value: V): this {
-		const item = this._list.find({ key })
-		if (item) {
-			item.value = value
-		} else {
-			this._list.add({ key, value })
+		// Fast path: if key is in the map as-is, update the value and call it a day.
+		if (this._map.has(key)) {
+			this._map.set(key, value)
+			return this
 		}
+
+		if (this._len) {
+			let pos = bisectLeft(this._maxes, key, this._cmp)
+
+			if (pos === this._maxes.length) {
+				pos--
+				this._lists[pos].push(key)
+				this._maxes[pos] = key
+			} else {
+				const sublist = this._lists[pos]
+				const idx = bisectLeft(sublist, key, this._cmp)
+				const val = sublist[idx]
+				if (!this._cmp(val, key)) {
+					this._map.set(val, value)
+					return this
+				}
+				sublist.splice(idx, 0, key)
+			}
+
+			this._expand(pos)
+		} else {
+			this._lists.push([key])
+			this._maxes.push(key)
+		}
+
+		this._map.set(key, value)
+		this._len++
 		return this
-	}
-
-	/**
-	 * Return an index to insert `key` in the SortedMap.
-	 *
-	 * If the `key` is already present, the insertion point will be the index of that entry.
-	 *
-	 * @example
-	 * const sd = new SortedMap([[10, 4], [11, 2], [12, 6], [13, 2], [14, 4]]);
-	 * sd.bisectLeft(12) // 2
-	 *
-	 * @param key - Key to find the insertion point of.
-	 * @returns Insertion index of `key` in the SortedMap.
-	 */
-	bisectLeft(key: C): number {
-		return this._list.bisectLeft({ key })
-	}
-
-	/**
-	 * Return an index to insert `key` in the SortedMap.
-	 *
-	 * Similar to {@link bisectLeft}, but if `value` is already present, the insertion point will be after (to the right of) the existing entry.
-	 *
-	 * @example
-	 * const sd = new SortedMap([[10, 4], [11, 2], [12, 6], [13, 2], [14, 4]]);
-	 * sl.bisectRight(12) // 3
-	 *
-	 * @param key - Key to find the insertion point of.
-	 * @returns Insertion index of `key` in the SortedMap.
-	 */
-	bisectRight(key: C): number {
-		return this._list.bisectRight({ key })
-	}
-
-	/**
-	 * Return the index of `key` in the SortedMap, or -1 if `key` is not present.
-	 *
-	 * Index must be between `start` and `end` for the `key` to be considered present.
-	 * Negative indices count back from the last item.
-	 *
-	 * @example
-	 * const sl = new SortedMap([['a', 1], ['b', 2], ['c', 4]]);
-	 * sl.indexOf('c') // 2
-	 * sl.indexOf('z') // -1
-	 *
-	 * @param key - Key in SortedMap.
-	 * @param start - The index at which to start the search (default 0).
-	 * @param end - The index at which to end the search (default length).
-	 * @returns The index of the occurrence of `key` in the sorted container, or -1 if it is not present.
-	 */
-	indexOf(key: C, start = 0, end = this._list._len): number {
-		return this._list.indexOf({ key }, start, end)
-	}
-
-	/**
-	 * Create an iterator of key-value pairs for keys between `minimumKey` and `maximumKey`.
-	 *
-	 * Both `minimum` and `maximum` default to `undefined` which is automatically inclusive of the beginning and end of the SortedMap.
-	 *
-	 * The argument `includeMinimum` and `includeMaximum` is a pair of booleans that indicates whether the minimum and maximum ought to be included in the range, respectively.
-	 * Both arguments default to `true` such that the range is inclusive of both minimum and maximum.
-	 *
-	 * When `reverse` is `true` the entries are yielded from the iterator in reverse order; `reverse` defaults to `false`.
-	 *
-	 * Iterating a SortedMap while adding or deleting elements may throw an error or silently fail to iterate over all entries.
-	 * This is different from the native Map.
-	 *
-	 * @example
-	 * const sd = new SortedMap([['a', 1], ['b', 2], ['c', 4], ['d', 7]]);
-	 * const it = sd.irange('b', 'c');
-	 * Array.from(it) // [['b', 2], ['c', 4]]
-	 *
-	 * @param minimum - Minimum value to start iterating.
-	 * @param maximum - Maximum value to stop iterating.
-	 * @param includeMinimum - Whether the minimum ought to be included in the range.
-	 * @param includeMaximum - Whether the maximum ought to be included in the range.
-	 * @param reverse - Whether to yield entries in reverse order.
-	 * @returns Iterator of key-value pairs.
-	 */
-	irange(minimumKey?: C, maximumKey?: C, includeMinimum = true, includeMaximum = true, reverse = false): IteratorObject<[K, V], undefined, unknown> {
-		return toEntries(this._list.irange(
-			minimumKey === undefined ? undefined : { key: minimumKey },
-			maximumKey === undefined ? undefined : { key: maximumKey },
-			includeMinimum,
-			includeMaximum,
-			reverse,
-		))
-	}
-
-	/**
-	 * Return an iterator that slices key-value pairs from `start` to `end`.
-	 *
-	 * The `start` and `end` index are treated inclusive and exclusive, respectively.
-	 *
-	 * A negative index will count back from the last item.
-	 *
-	 * Both `start` and `end` default to `undefined` which is automatically inclusive of the beginning and end of the SortedMap.
-	 *
-	 * When `reverse` is `true` the entries are yielded from the iterator in reverse order; `reverse` defaults to `false`.
-	 *
-	 * Iterating a SortedMap while adding or deleting elements may throw an error or silently fail to iterate over all entries.
-	 * This is different from the native Map.
-	 *
-	 * @example
-	 * const sd = new SortedMap([['a', 1], ['b', 2], ['c', 4], ['d', 7]]);
-	 * const it = sd.islice(1, 3);
-	 * Array.from(it) // [['b', 2], ['c', 4]]
-	 *
-	 * @param start - Start index (inclusive).
-	 * @param end - Stop index (exclusive).
-	 * @param reverse - Whether to yield entries in reverse order.
-	 * @returns Iterator of key-value pairs.
-	 */
-	islice(start = 0, end = this._list._len, reverse = false): IteratorObject<[K, V], undefined, unknown> {
-		return toEntries(this._list.islice(start, end, reverse))
 	}
 
 	/**
 	 * Remove all items from the SortedMap.
 	 */
 	clear(): void {
-		this._list.clear()
+		super.clear()
+		this._map.clear()
 	}
 
-	/**
-	 * Remove item identified by `key` from the SortedMap.
-	 *
-	 * @example
-	 * const sd = new SortedMap([['a', 1], ['b', 2], ['c', 3]]);
-	 * sd.delete('b') // true
-	 * sd // SortedMap {'a' => 1, 'c' => 3}
-	 * sd.delete('z') // false
-	 *
-	 * @param key - Key for item lookup.
-	 * @returns true if an item in the SortedMap existed and has been removed, or false if the key does not exist.
-	 */
-	delete(key: C): boolean {
-		return this._list.delete({ key })
+	_delete(pos: number, idx: number): void {
+		this._map.delete(this._lists[pos][idx])
+		super._delete(pos, idx)
 	}
 
-	/**
-	 * An alias for {@link entries}.
-	 */
-	declare [Symbol.iterator]: () => MapIterator<[K, V]>
+	deleteSlice(start = 0, end = this._len): void {
+		if (start < 0) start += this._len
+		start = Math.min(Math.max(start, 0), this._len)
+		if (end < 0) end += this._len
+		end = Math.min(Math.max(end, 0), this._len)
+
+		if (start >= end) return
+		if (start === 0 && end === this._len) {
+			return this.clear()
+		}
+		// if (this._len <= 8 * (end - start)) {
+		// 	let keys = this.slice(0, start)
+		// 	if (end < this._len) {
+		// 		keys = keys.concat(this.slice(end))
+		// 	}
+		// 	this.clear()
+		// 	return this.update(keys)
+		// }
+
+		for (let index = end - 1; index >= start; index--) {
+			const [pos, idx] = this._pos(index)
+			this._delete(pos, idx)
+		}
+	}
 
 	/**
 	 * Return a shallow copy of the SortedMap.
 	 *
 	 * @returns A new SortedMap instance.
 	 */
-	clone(): SortedMap<K, V, C> {
-		return {
-			// @ts-expect-error
-			__proto__: SortedMap.prototype,
-			_list: this._list.clone(),
-		}
-	}
-
-	/**
-	 * Return an iterator of the SortedMap's keys.
-	 *
-	 * Iterating a SortedMap while adding or deleting elements may throw an error or silently fail to iterate over all entries.
-	 * This is different from the native Map.
-	 */
-	keys(): MapIterator<K> {
-		return toKeys(this._list.values())
+	clone(): this {
+		const that = super.clone()
+		that._map = new Map(that._map)
+		return that
 	}
 
 	/**
@@ -381,19 +281,46 @@ export class SortedMap<K extends C, V, C = K> implements Map<K, V> {
 	 * If thisArg is omitted, undefined is used.
 	 */
 	forEach(fn: (value: V, key: K, map: SortedMap<K, V>) => void, thisArg?: any): void {
-		for (const sublist of this._list._lists) {
-			for (const { key, value } of sublist) fn.call(thisArg, value, key, this)
+		for (const sublist of this._lists) {
+			for (const key of sublist) fn.call(thisArg, this._map.get(key)!, key, this)
 		}
 	}
 
 	/**
 	 * Return an iterator of key-value pairs over the SortedMap.
 	 *
+	 * The returned iterator yields the same object on every iteration to save allocations,
+	 * so you must unpack the pair before calling `.next()`.
+	 *
 	 * Iterating a SortedMap while adding or deleting elements may throw an error or silently fail to iterate over all entries.
 	 * This is different from the native Map.
 	 */
 	entries(): MapIterator<[K, V]> {
-		return this.islice()
+		const lists = this._lists
+		const map = this._map
+		let pos = 0
+		let idx = 0
+		return {
+			// @ts-expect-error
+			__proto__: IteratorPrototype,
+			next(this: IteratorResult<[K, V], undefined>) {
+				if (pos >= lists.length) {
+					this.value = undefined
+					this.done = true
+				} else {
+					const key = lists[pos][idx]
+					this.value = [key, map.get(key)!]
+					idx++
+					if (idx >= lists[pos].length) {
+						pos++
+						idx = 0
+					}
+				}
+				return this
+			},
+			value: undefined,
+			done: false,
+		}
 	}
 
 	/**
@@ -403,7 +330,18 @@ export class SortedMap<K extends C, V, C = K> implements Map<K, V> {
 	 * This is different from the native Map.
 	 */
 	values(): MapIterator<V> {
-		return toValues(this._list.values())
+		const map = this._map
+		const iter = this._iter()
+		const next = iter.next
+		// @ts-expect-error
+		iter.next = function () {
+			next.call(iter)
+			// @ts-expect-error
+			iter.value = map.get(iter.value)
+			return iter
+		}
+		// @ts-expect-error
+		return iter
 	}
 
 	/**
@@ -414,23 +352,20 @@ export class SortedMap<K extends C, V, C = K> implements Map<K, V> {
 	 *
 	 * @example
 	 * const sd = new SortedMap([['a', 1], ['b', 2], ['c', 3]]);
-	 * sd.pop('c') // 3
-	 * sd.pop('z', 26) // 26
-	 * sd.pop('y') // undefined
+	 * sd.popKey('c') // 3
+	 * sd.popKey('z', 26) // 26
+	 * sd.popKey('y') // undefined
 	 *
 	 * @param key - Key for item.
 	 * @param defaultValue - Default value if key not found (optional).
 	 * @returns Value for item.
 	 */
-	pop(key: C): V | undefined
-	pop(key: C, defaultValue: V): V
-	pop(key: C, defaultValue?: V): V | undefined {
-		const item = this._list.find({ key })
-		if (item) {
-			this._list.delete({ key })
-			return item.value
-		}
-		return defaultValue
+	popKey(key: C): V | undefined
+	popKey<R>(key: C, defaultValue: R): V | R
+	popKey(key: C, defaultValue?: unknown): unknown {
+		const val = this.get(key, defaultValue)
+		this.delete(key)
+		return val
 	}
 
 	/**
@@ -451,8 +386,9 @@ export class SortedMap<K extends C, V, C = K> implements Map<K, V> {
 	 * @returns Key and value pair.
 	 */
 	popEntry(index = -1): [K, V] | undefined {
-		const item = this._list.deleteAt(index)
-		return item ? [item.key, item.value] : undefined
+		const entry = this.entryAt(index)
+		this.deleteAt(index)
+		return entry
 	}
 
 	/**
@@ -465,16 +401,17 @@ export class SortedMap<K extends C, V, C = K> implements Map<K, V> {
 	 *
 	 * @example
 	 * const sd = new SortedMap([['a', 1], ['b', 2], ['c', 3]]);
-	 * sd.at() // ['c', 3]
-	 * sd.at(0) // ['a', 1]
-	 * sd.at(100) // undefined
+	 * sd.entryAt() // ['c', 3]
+	 * sd.entryAt(0) // ['a', 1]
+	 * sd.entryAt(100) // undefined
 	 *
 	 * @param index - Index of item (default -1).
 	 * @returns Key and value pair.
 	 */
-	at(index = -1): [K, V] | undefined {
-		const item = this._list.at(index)
-		return item ? [item.key, item.value] : undefined
+	entryAt(index = -1): [K, V] | undefined {
+		if (index < -this._len || index >= this._len) return undefined
+		const key = this.at(index)!
+		return [key, this._map.get(key)!]
 	}
 
 	/**
@@ -494,13 +431,11 @@ export class SortedMap<K extends C, V, C = K> implements Map<K, V> {
 	 * @returns Value of the entry after potential insertion.
 	 */
 	upsert(key: K, defaultValue: V): V {
-		const item = this._list.find({ key })
-		if (item) {
-			return item.value
-		} else {
-			this._list.add({ key, value: defaultValue })
-			return defaultValue
+		if (this.has(key)) {
+			return this.get(key)!
 		}
+		this.set(key, defaultValue)
+		return defaultValue
 	}
 
 	/**
@@ -514,14 +449,82 @@ export class SortedMap<K extends C, V, C = K> implements Map<K, V> {
 	 * @param other - Iterable of pairs.
 	 */
 	update(other: Iterable<[K, V]>): void {
-		for (const [key, value] of other) {
+		for (const [key, value] of Array.from(other)) {
 			this.set(key, value)
 		}
 	}
-
-	declare [Symbol.toStringTag]: string
 }
 
+export interface SortedMap<K, V, C> {
+	/**
+	 * @returns A boolean value indicating whether an entry with the specified key exists or not.
+	 */
+	has(key: C): boolean
+
+	/**
+	 * Return an index to insert `key` in the SortedMap.
+	 *
+	 * If the `key` is already present, the insertion point will be the index of that entry.
+	 *
+	 * @example
+	 * const sd = new SortedMap([[10, 4], [11, 2], [12, 6], [13, 2], [14, 4]]);
+	 * sd.bisectLeft(12) // 2
+	 *
+	 * @param key - Key to find the insertion point of.
+	 * @returns Insertion index of `key` in the SortedMap.
+	 */
+	bisectLeft(key: C): number
+
+	/**
+	 * Return an index to insert `key` in the SortedMap.
+	 *
+	 * Similar to {@link bisectLeft}, but if `value` is already present, the insertion point will be after (to the right of) the existing entry.
+	 *
+	 * @example
+	 * const sd = new SortedMap([[10, 4], [11, 2], [12, 6], [13, 2], [14, 4]]);
+	 * sl.bisectRight(12) // 3
+	 *
+	 * @param key - Key to find the insertion point of.
+	 * @returns Insertion index of `key` in the SortedMap.
+	 */
+	bisectRight(key: C): number
+
+	/**
+	 * Return the index of `key` in the SortedMap, or -1 if `key` is not present.
+	 *
+	 * Index must be between `start` and `end` for the `key` to be considered present.
+	 * Negative indices count back from the last item.
+	 *
+	 * @example
+	 * const sl = new SortedMap([['a', 1], ['b', 2], ['c', 4]]);
+	 * sl.indexOf('c') // 2
+	 * sl.indexOf('z') // -1
+	 *
+	 * @param key - Key in SortedMap.
+	 * @param start - The index at which to start the search (default 0).
+	 * @param end - The index at which to end the search (default length).
+	 * @returns The index of the occurrence of `key` in the sorted container, or -1 if it is not present.
+	 */
+	indexOf(key: C, start?: number, end?: number): number
+
+	/**
+	 * Return an iterator of the SortedMap's keys.
+	 *
+	 * Iterating a SortedMap while adding or deleting elements may throw an error or silently fail to iterate over all entries.
+	 * This is different from the native Map.
+	 */
+	keys(): MapIterator<K>
+
+	/**
+	 * An alias for {@link entries}.
+	 */
+	[Symbol.iterator](): MapIterator<[K, V]>
+
+	[Symbol.toStringTag]: string
+}
+
+SortedMap.prototype.has = AbstractSortedArray.prototype._has
+SortedMap.prototype.keys = AbstractSortedArray.prototype._iter
 SortedMap.prototype[Symbol.iterator] = SortedMap.prototype.entries
 SortedMap.prototype[Symbol.toStringTag] = 'SortedMap'
 
@@ -530,12 +533,11 @@ SortedMap.prototype[Symbol.toStringTag] = 'SortedMap'
  *
  * @throws {Error} If the SortedMap is corrupted.
  */
-export function checkSortedMap<K, V>(self: SortedMap<K, V>) {
-	checkAbstractSortedArray(self._list)
+export function checkSortedMap<K extends C, V, C>(self: SortedMap<K, V, C>) {
+	checkAbstractSortedArray(self)
 
-	// Check all items are key-value objects.
-	for (const item of self._list) {
-		const keys = Object.keys(item)
-		assert(keys.length === 2 && keys[0] === 'key' && keys[1] === 'value')
+	assert(self._len === self._map.size)
+	for (const key of self.keys()) {
+		assert(self._map.has(key))
 	}
 }
