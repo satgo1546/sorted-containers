@@ -490,6 +490,50 @@ As for SortedSet, a produced set must inherit its parameters from one of the ope
 It is then only natural for SortedSet methods to take an iterable argument and keep the parameters of `this`.
 Because of this, SortedSet cannot be compatible with the native Set.
 
+## The iterator
+
+Iterators and itertools are the pearl of Python.
+They are used everywhere.
+Few functions accept lists but not iterables.
+Iterator functions and expressions are built into the language core.
+itertools is implemented in C,
+so that it is possible to create efficient iterators from user code by composing existing ones.
+
+Iterators are also available in JavaScript,
+but they are much less rich in feature and less widely adopted.
+
+Many of the older collection libraries in the JavaScript ecosystem lack support for iterators,
+because the concept of an iterator is only introduced in ES6.
+Before that, Array had `forEach`, and libraries followed suit.
+There is one problem though: you cannot break a forEach loop without throwing an exception.
+Libraries had to provide ad-hoc ways to break out of the loop.
+
+Iterators solve this problem,
+but they are otherwise so badly designed that they come with a performance hit by default:
+they need to return two pieces of information, `value` and `done`,
+packaged into an iterator result object on each invocation of `next`,
+which implies memory allocation on each iteration.
+In contrast, `forEach` just calls a closure many times,
+without the need to allocate anything on the heap.
+Therefore, `forEach` is usually faster than iterator-based loops.
+sorted-containers cheats by reusing the same result object on each iteration,
+witnessing a 2x speed-up in extreme cases.
+
+It is hard to compose iterators in JavaScript.
+For a long time, the only ergonomic way to compose iterators
+(without resorting to writing `next` functions and result objects by hand)
+is to write a generator function.
+Generator functions are heavy and slow, however.
+
+As of Oct 2024, class Iterator has been added to the standard
+to provide facilities like those in Python builtins and itertools.
+It is quite a breaking change and poses library authors with a compatibility challenge.
+If class Iterator is present, iterators must inherit it to make helper methods available;
+but otherwise, class Iterator does not even exist.
+Rather than detecting the presence of class Iterator,
+sorted-containers steals the prototype of the built-in Array iterator,
+which has been around for ages and automatically gains new abilities with the introduction of Iterator constructor.
+
 ## Conclusion
 
 In Python, container libraries often adopt APIs similar to built-in collection classes,

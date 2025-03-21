@@ -592,23 +592,29 @@ export abstract class AbstractSortedArray<T extends C, C = T> {
 	 */
 	_islice(minPos: number, minIdx: number, maxPos: number, maxIdx: number, reverse: boolean): IteratorObject<T, undefined, unknown> {
 		// Rolling our own Iterator object in this case is both simpler and more performant than using a generator function.
+		const lists = this._lists
 		if (reverse) {
 			let pos = maxPos
 			let idx = maxIdx
 			return {
 				// @ts-expect-error
 				__proto__: IteratorPrototype,
-				next: () => {
+				next(this: IteratorResult<T, undefined>) {
 					if (pos < minPos || pos === minPos && idx <= minIdx) {
-						return { value: undefined, done: true }
+						this.value = undefined
+						this.done = true
+						return this
 					}
 					idx--
 					if (idx < 0) {
 						pos--
-						idx += this._lists[pos].length
+						idx += lists[pos].length
 					}
-					return { value: this._lists[pos][idx], done: false }
+					this.value = lists[pos][idx]
+					return this
 				},
+				value: undefined,
+				done: false,
 			}
 		} else {
 			let pos = minPos
@@ -616,17 +622,21 @@ export abstract class AbstractSortedArray<T extends C, C = T> {
 			return {
 				// @ts-expect-error
 				__proto__: IteratorPrototype,
-				next: () => {
+				next(this: IteratorResult<T, undefined>) {
 					if (pos > maxPos || pos === maxPos && idx >= maxIdx) {
-						return { value: undefined, done: true }
+						this.value = undefined
+						this.done = true
+						return this
 					}
-					const ret = { value: this._lists[pos][idx++], done: false as const }
-					if (idx >= this._lists[pos].length) {
+					this.value = lists[pos][idx++]
+					if (idx >= lists[pos].length) {
 						pos++
 						idx = 0
 					}
-					return ret
+					return this
 				},
+				value: undefined,
+				done: false,
 			}
 		}
 	}
@@ -887,7 +897,7 @@ export abstract class AbstractSortedArray<T extends C, C = T> {
 	 * @param value - The value to find.
 	 */
 	find(value: C): T | undefined {
-		if (!this._len)	return undefined
+		if (!this._len) return undefined
 
 		const pos = bisectLeft(this._maxes, value, this._cmp)
 		if (pos === this._maxes.length) return undefined
