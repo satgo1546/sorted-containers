@@ -184,20 +184,18 @@ export abstract class AbstractSortedArray<T extends C, C = T> {
 	 * @internal
 	 */
 	_delete(pos: number, idx: number): void {
-		const _lists_pos = this._lists[pos]
-		_lists_pos.splice(idx, 1)
+		const sublist = this._lists[pos]
+		sublist.splice(idx, 1)
 		this._len--
 
-		const len_lists_pos = _lists_pos.length
+		const sublistLength = sublist.length
 
-		if (len_lists_pos > (this._load >>> 1)) {
-			this._maxes[pos] = _lists_pos[_lists_pos.length - 1]
+		if (sublistLength > (this._load >>> 1)) {
+			this._maxes[pos] = sublist[sublist.length - 1]
 
 			if (this._index.length) {
-				let child = this._offset + pos
-				while (child > 0) {
+				for (let child = this._offset + pos; child; child = child - 1 >>> 1) {
 					this._index[child]--
-					child = (child - 1) >>> 1
 				}
 				this._index[0]--
 			}
@@ -213,8 +211,8 @@ export abstract class AbstractSortedArray<T extends C, C = T> {
 			this._index = []
 
 			this._expand(prev)
-		} else if (len_lists_pos > 0) {
-			this._maxes[pos] = _lists_pos[_lists_pos.length - 1]
+		} else if (sublistLength > 0) {
+			this._maxes[pos] = sublist[sublist.length - 1]
 		} else {
 			this._lists.splice(pos, 1)
 			this._maxes.splice(pos, 1)
