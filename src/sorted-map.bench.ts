@@ -12,7 +12,7 @@ import CollectionsSortedMap from 'collections/sorted-map.js'
 import { bisectLeft, bisectRight } from './bisect.ts'
 
 const random = seedrandom('')
-const list = Array.from({ length: 1000000 }, (_, i) => i)
+const list = Array.from({ length: 1000000 }, (_, i) => i * 2)
 for (let i = list.length - 1; i; i--) {
 	const j = Math.floor(random() * (i + 1))
 	const tmp = list[i]
@@ -181,7 +181,14 @@ for (const [description, values] of Object.entries({
 	})
 
 	benchFunctionalRedBlackTree(tree => {
-		for (const val of values) tree = tree.find(val).update(-val)
+		for (const val of values) {
+			const it = tree.find(val)
+			if (it.valid) {
+				tree = it.update(-val)
+			} else {
+				tree = tree.insert(val, -val)
+			}
+		}
 		return tree.length
 	})
 
