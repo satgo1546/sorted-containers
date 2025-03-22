@@ -123,7 +123,7 @@ function toEntries<K, V>(iterator: Iterator<{ key: K, value: V }>): IteratorObje
  */
 export class SortedMap<K extends C, V, C = K> extends AbstractSortedArray<K, C> implements Map<K, V> {
 	/** @internal */
-	_map: Map<K, V>
+	_values: V[][]
 
 	/**
 	 * Initialize a SortedMap instance, optionally with the given key-value pairs.
@@ -145,7 +145,7 @@ export class SortedMap<K extends C, V, C = K> extends AbstractSortedArray<K, C> 
 	 */
 	constructor(iterable?: Iterable<[K, V]>, options?: SortedArrayConstructorOptions<C>) {
 		super(undefined, options)
-		this._map = new Map
+		this._values = []
 		if (iterable) {
 			this.update(iterable)
 		}
@@ -169,9 +169,13 @@ export class SortedMap<K extends C, V, C = K> extends AbstractSortedArray<K, C> 
 	get(key: C): V | undefined
 	get<R>(key: C, defaultValue: R): V | R
 	get(key: C, defaultValue?: unknown): unknown {
-		if (this._map.has(key as K)) return this._map.get(key as K)!
-		if (this.has(key)) return this._map.get(this.find(key)!)!
-		return defaultValue
+		const pos = bisectLeft(this._maxes, key, this._cmp)
+		if (pos === this._maxes.length) return defaultValue
+
+		const idx = bisectLeft(this._lists[pos], key, this._cmp)
+		if (this._cmp(this._lists[pos][idx], key)) return defaultValue
+
+		return this._values[pos][idx]
 	}
 
 	/**
@@ -189,39 +193,45 @@ export class SortedMap<K extends C, V, C = K> extends AbstractSortedArray<K, C> 
 	 * @param value - Value for entry.
 	 */
 	set(key: K, value: V): this {
-		// Fast path: if key is in the map as-is, update the value and call it a day.
-		if (this._map.has(key)) {
-			this._map.set(key, value)
-			return this
-		}
-
 		if (this._len) {
 			let pos = bisectLeft(this._maxes, key, this._cmp)
 
 			if (pos === this._maxes.length) {
 				pos--
 				this._lists[pos].push(key)
+				this._values[pos].push(value)
 				this._maxes[pos] = key
 			} else {
 				const sublist = this._lists[pos]
+				const valList = this._values[pos]
 				const idx = bisectLeft(sublist, key, this._cmp)
 				const val = sublist[idx]
 				if (!this._cmp(val, key)) {
-					this._map.set(val, value)
+					valList[idx] = value
 					return this
 				}
 				sublist.splice(idx, 0, key)
+				valList.splice(idx, 0, value)
 			}
 
 			this._expand(pos)
 		} else {
 			this._lists.push([key])
+			this._values.push([value])
 			this._maxes.push(key)
 		}
 
-		this._map.set(key, value)
 		this._len++
 		return this
+	}
+
+	_expand(pos: number): void {
+		super._expand(pos)
+		if (this._values[pos].length > this._load << 1) {
+			const sublist = this._values[pos]
+			const half = sublist.splice(this._load)
+			this._values.splice(pos + 1, 0, half)
+		}
 	}
 
 	/**
@@ -229,11 +239,22 @@ export class SortedMap<K extends C, V, C = K> extends AbstractSortedArray<K, C> 
 	 */
 	clear(): void {
 		super.clear()
-		this._map.clear()
+		this._values = []
 	}
 
 	_delete(pos: number, idx: number): void {
-		this._map.delete(this._lists[pos][idx])
+		const sublist = this._values[pos]
+		sublist.splice(idx, 1)
+		const sublistLength = sublist.length
+		if (sublistLength <= this._load >>> 1) {
+			if (this._values.length > 1) {
+				const prev = pos && pos - 1
+				this._values[prev].push(...this._values[prev + 1])
+				this._values.splice(prev + 1, 1)
+			} else if (!sublistLength) {
+				this._values.pop()
+			}
+		}
 		super._delete(pos, idx)
 	}
 
@@ -269,7 +290,7 @@ export class SortedMap<K extends C, V, C = K> extends AbstractSortedArray<K, C> 
 	 */
 	clone(): this {
 		const that = super.clone()
-		that._map = new Map(that._map)
+		that._values = this._values.map(sublist => sublist.slice())
 		return that
 	}
 
@@ -281,8 +302,12 @@ export class SortedMap<K extends C, V, C = K> extends AbstractSortedArray<K, C> 
 	 * If thisArg is omitted, undefined is used.
 	 */
 	forEach(fn: (value: V, key: K, map: SortedMap<K, V>) => void, thisArg?: any): void {
-		for (const sublist of this._lists) {
-			for (const key of sublist) fn.call(thisArg, this._map.get(key)!, key, this)
+		for (let pos = 0; pos < this._lists.length; pos++) {
+			const sublist = this._lists[pos]
+			const valList = this._values[pos]
+			for (let idx = 0; idx < sublist.length; idx++) {
+				fn.call(thisArg, valList[idx], sublist[idx], this)
+			}
 		}
 	}
 
@@ -297,7 +322,7 @@ export class SortedMap<K extends C, V, C = K> extends AbstractSortedArray<K, C> 
 	 */
 	entries(): MapIterator<[K, V]> {
 		const lists = this._lists
-		const map = this._map
+		const values = this._values
 		let pos = 0
 		let idx = 0
 		return {
@@ -308,8 +333,7 @@ export class SortedMap<K extends C, V, C = K> extends AbstractSortedArray<K, C> 
 					this.value = undefined
 					this.done = true
 				} else {
-					const key = lists[pos][idx]
-					this.value = [key, map.get(key)!]
+					this.value = [lists[pos][idx], values[pos][idx]]
 					idx++
 					if (idx >= lists[pos].length) {
 						pos++
@@ -330,18 +354,28 @@ export class SortedMap<K extends C, V, C = K> extends AbstractSortedArray<K, C> 
 	 * This is different from the native Map.
 	 */
 	values(): MapIterator<V> {
-		const map = this._map
-		const iter = this._iter()
-		const next = iter.next
-		// @ts-expect-error
-		iter.next = function () {
-			next.call(iter)
+		const values = this._values
+		let pos = 0
+		let idx = 0
+		return {
 			// @ts-expect-error
-			iter.value = map.get(iter.value)
-			return iter
+			__proto__: IteratorPrototype,
+			next(this: IteratorResult<V, undefined>) {
+				if (pos >= values.length) {
+					this.value = undefined
+					this.done = true
+				} else {
+					this.value = values[pos][idx++]
+					if (idx >= values[pos].length) {
+						pos++
+						idx = 0
+					}
+				}
+				return this
+			},
+			value: undefined,
+			done: false,
 		}
-		// @ts-expect-error
-		return iter
 	}
 
 	/**
@@ -410,8 +444,8 @@ export class SortedMap<K extends C, V, C = K> extends AbstractSortedArray<K, C> 
 	 */
 	entryAt(index = -1): [K, V] | undefined {
 		if (index < -this._len || index >= this._len) return undefined
-		const key = this.at(index)!
-		return [key, this._map.get(key)!]
+		const [pos, idx] = this._pos(index)
+		return [this._lists[pos][idx], this._values[pos][idx]]
 	}
 
 	/**
@@ -536,8 +570,8 @@ SortedMap.prototype[Symbol.toStringTag] = 'SortedMap'
 export function checkSortedMap<K extends C, V, C>(self: SortedMap<K, V, C>) {
 	checkAbstractSortedArray(self)
 
-	assert(self._len === self._map.size)
-	for (const key of self.keys()) {
-		assert(self._map.has(key))
+	assert(self._lists.length === self._values.length)
+	for (let pos = 0; pos < self._lists.length; pos++) {
+		assert(self._lists[pos].length === self._values[pos].length)
 	}
 }
