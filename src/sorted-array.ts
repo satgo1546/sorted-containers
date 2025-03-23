@@ -98,14 +98,21 @@ export class SortedArray<T extends C, C = T> extends AbstractSortedArray<T, C> {
 			}
 		}
 
-		for (let pos = 0; pos < values.length; pos += this._load) {
-			this._lists.push(values.slice(pos, pos + this._load))
-		}
-		for (const sublist of this._lists) {
-			this._maxes.push(sublist[sublist.length - 1])
-		}
-		this._len = values.length
-		this._index = []
+		this._set(values)
+	}
+
+	/**
+	 * Return true if `value` is an element of the SortedArray.
+	 *
+	 * @example
+	 * const sl = new SortedArray([1, 2, 3, 4, 5]);
+	 * sl.includes(3) // true
+	 *
+	 * @param value - Search for value in SortedArray.
+	 * @returns True if `value` in SortedArray.
+	 */
+	includes(value: C): boolean {
+		return this._has(value)
 	}
 
 	/**
@@ -122,11 +129,25 @@ export class SortedArray<T extends C, C = T> extends AbstractSortedArray<T, C> {
 	}
 
 	/**
+	 * An alias for {@link values}.
+	 */
+	[Symbol.iterator](): ArrayIterator<T> {
+		return this._iter()
+	}
+
+	/**
 	 * Returns an iterable of integers ranging from 0 (inclusive) to the length of the SortedArray (exclusive).
 	 */
 	keys(): ArrayIterator<number> {
 		// Array(n) pre-allocates so Array(this._len).keys() is slower.
 		return Array.prototype.keys.call({ length: this._len })
+	}
+
+	/**
+	 * Returns an iterable of values in the SortedArray.
+	 */
+	values(): ArrayIterator<T> {
+		return this._iter()
 	}
 
 	/**
@@ -195,34 +216,6 @@ export class SortedArray<T extends C, C = T> extends AbstractSortedArray<T, C> {
 		return new SortedArray([...this._lists.flat(), ...other], { comparator: this._cmp })
 	}
 }
-
-export interface SortedArray<T, C> {
-	/**
-	 * Return true if `value` is an element of the SortedArray.
-	 *
-	 * @example
-	 * const sl = new SortedArray([1, 2, 3, 4, 5]);
-	 * sl.includes(3) // true
-	 *
-	 * @param value - Search for value in SortedArray.
-	 * @returns True if `value` in SortedArray.
-	 */
-	includes(value: C): boolean
-
-	/**
-	 * Returns an iterable of values in the SortedArray.
-	 */
-	values(): ArrayIterator<T>
-
-	/**
-	 * An alias for {@link values}.
-	 */
-	[Symbol.iterator](): ArrayIterator<T>
-}
-
-SortedArray.prototype[Symbol.toStringTag] = 'SortedArray'
-SortedArray.prototype.includes = AbstractSortedArray.prototype._has
-SortedArray.prototype.values = SortedArray.prototype[Symbol.iterator] = AbstractSortedArray.prototype._iter
 
 /**
  * Check the invariants of a SortedArray.

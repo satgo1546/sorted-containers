@@ -129,6 +129,21 @@ export abstract class AbstractSortedArray<T extends C, C = T> {
 	abstract update(iterable: Iterable<any>): void
 
 	/**
+	 * Initialize from an Array of sorted values.
+	 *
+	 * @internal
+	 */
+	_set(values: T[]) {
+		this._lists = []
+		for (let pos = 0; pos < values.length; pos += this._load) {
+			this._lists.push(values.slice(pos, pos + this._load))
+		}
+		this._maxes = this._lists.map(sublist => sublist[sublist.length - 1])
+		this._len = values.length
+		this._index = []
+	}
+
+	/**
 	 * Return true if `value` is an element of the sorted container.
 	 *
 	 * @internal
@@ -460,8 +475,7 @@ export abstract class AbstractSortedArray<T extends C, C = T> {
 				if (end < this._len) {
 					values = values.concat(this.slice(end))
 				}
-				this.clear()
-				return this.update(values)
+				return this._set(values)
 			}
 		}
 
@@ -939,8 +953,6 @@ export abstract class AbstractSortedArray<T extends C, C = T> {
 	toString(): string {
 		return this._lists.toString()
 	}
-
-	declare [Symbol.toStringTag]: string
 }
 
 /**

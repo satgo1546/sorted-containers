@@ -110,6 +110,13 @@ export class SortedMap<K extends C, V, C = K> extends AbstractSortedArray<K, C> 
 	}
 
 	/**
+	 * @returns A boolean value indicating whether an entry with the specified key exists or not.
+	 */
+	has(key: C): boolean {
+		return super._has(key)
+	}
+
+	/**
 	 * Get the value associated with the `key`, with `defaultValue` as a fallback.
 	 *
 	 * @param key - The key to look up.
@@ -227,6 +234,13 @@ export class SortedMap<K extends C, V, C = K> extends AbstractSortedArray<K, C> 
 	}
 
 	/**
+	 * An alias for {@link entries}.
+	 */
+	[Symbol.iterator](): MapIterator<[K, V]> {
+		return this.entries()
+	}
+
+	/**
 	 * Return a shallow copy of the SortedMap.
 	 *
 	 * @returns A new SortedMap instance.
@@ -252,6 +266,16 @@ export class SortedMap<K extends C, V, C = K> extends AbstractSortedArray<K, C> 
 				fn.call(thisArg, valList[idx], sublist[idx], this)
 			}
 		}
+	}
+
+	/**
+	 * Return an iterator of the SortedMap's keys.
+	 *
+	 * Iterating a SortedMap while adding or deleting elements may throw an error or silently fail to iterate over all entries.
+	 * This is different from the native Map.
+	 */
+	keys(): MapIterator<K> {
+		return super._iter()
 	}
 
 	/**
@@ -430,14 +454,14 @@ export class SortedMap<K extends C, V, C = K> extends AbstractSortedArray<K, C> 
 			this.set(key, value)
 		}
 	}
+
+	get [Symbol.toStringTag](): string {
+		return 'SortedMap'
+	}
 }
 
+// Override documentation for select methods.
 export interface SortedMap<K, V, C> {
-	/**
-	 * @returns A boolean value indicating whether an entry with the specified key exists or not.
-	 */
-	has(key: C): boolean
-
 	/**
 	 * Return an index to insert `key` in the SortedMap.
 	 *
@@ -483,27 +507,7 @@ export interface SortedMap<K, V, C> {
 	 * @returns The index of the occurrence of `key` in the sorted container, or -1 if it is not present.
 	 */
 	indexOf(key: C, start?: number, end?: number): number
-
-	/**
-	 * Return an iterator of the SortedMap's keys.
-	 *
-	 * Iterating a SortedMap while adding or deleting elements may throw an error or silently fail to iterate over all entries.
-	 * This is different from the native Map.
-	 */
-	keys(): MapIterator<K>
-
-	/**
-	 * An alias for {@link entries}.
-	 */
-	[Symbol.iterator](): MapIterator<[K, V]>
-
-	[Symbol.toStringTag]: string
 }
-
-SortedMap.prototype.has = AbstractSortedArray.prototype._has
-SortedMap.prototype.keys = AbstractSortedArray.prototype._iter
-SortedMap.prototype[Symbol.iterator] = SortedMap.prototype.entries
-SortedMap.prototype[Symbol.toStringTag] = 'SortedMap'
 
 /**
  * Check the invariants of a SortedMap.

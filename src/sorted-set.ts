@@ -44,7 +44,6 @@ function iterableToSortedArraySet<T>(iterable: Iterable<T>, cmp: (a: T, b: T) =>
  * - {@link SortedSet#keys}
  * - {@link SortedSet#values}
  * - {@link SortedSet#[Symbol.iterator]}
- * - {@link SortedSet#[Symbol.toStringTag]}
  *
  * SortedArray methods:
  *
@@ -85,17 +84,17 @@ function iterableToSortedArraySet<T>(iterable: Iterable<T>, cmp: (a: T, b: T) =>
  */
 export class SortedSet<T extends C, C = T> extends AbstractSortedArray<T, C> {
 	/**
-	 * Initialize from an Array of sorted unique values.
+	 * Return true if `value` is an element of the SortedSet.
 	 *
-	 * @internal
+	 * @example
+	 * const ss = new SortedSet([1, 2, 3, 4, 5]);
+	 * ss.has(3) // true
+	 *
+	 * @param value - Search for this value in the SortedSet.
+	 * @returns true if `value` is in the SortedSet.
 	 */
-	_set(values: T[]) {
-		this._lists = []
-		for (let pos = 0; pos < values.length; pos += this._load) {
-			this._lists.push(values.slice(pos, pos + this._load))
-		}
-		this._maxes = this._lists.map(sublist => sublist[sublist.length - 1])
-		this._len = values.length
+	has(value: C): boolean {
+		return this._has(value)
 	}
 
 	/**
@@ -161,6 +160,27 @@ export class SortedSet<T extends C, C = T> extends AbstractSortedArray<T, C> {
 		for (const sublist of this._lists) {
 			for (const val of sublist) fn.call(thisArg, val, val, this)
 		}
+	}
+
+	/**
+	 * An alias for {@link values}.
+	 */
+	[Symbol.iterator](): ArrayIterator<T> {
+		return this._iter()
+	}
+
+	/**
+	 * Despite its name, returns an iterable of the values in the SortedSet.
+	 */
+	keys(): SetIterator<T> {
+		return this._iter()
+	}
+
+	/**
+	 * Returns an iterable of values in the SortedSet.
+	 */
+	values(): SetIterator<T> {
+		return this._iter()
 	}
 
 	/**
@@ -419,40 +439,6 @@ export class SortedSet<T extends C, C = T> extends AbstractSortedArray<T, C> {
 		}
 	}
 }
-
-export interface SortedSet<T, C> {
-	/**
-	 * Return true if `value` is an element of the SortedSet.
-	 *
-	 * @example
-	 * const ss = new SortedSet([1, 2, 3, 4, 5]);
-	 * ss.has(3) // true
-	 *
-	 * @param value - Search for this value in the SortedSet.
-	 * @returns true if `value` is in the SortedSet.
-	 */
-	has(value: C): boolean
-
-	/**
-	 * Despite its name, returns an iterable of the values in the SortedSet.
-	 */
-	keys(): SetIterator<T>
-
-	/**
-	 * Returns an iterable of values in the SortedSet.
-	 */
-	values(): SetIterator<T>
-
-	/**
-	 * An alias for {@link values}.
-	 */
-	[Symbol.iterator](): ArrayIterator<T>
-}
-
-SortedSet.prototype[Symbol.toStringTag] = 'SortedSet'
-SortedSet.prototype.has = AbstractSortedArray.prototype._has
-SortedSet.prototype.keys = SortedSet.prototype.values = SortedSet.prototype[Symbol.iterator]
-	= AbstractSortedArray.prototype._iter
 
 /**
  * Check the invariants of a SortedSet.
