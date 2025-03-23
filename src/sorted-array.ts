@@ -222,4 +222,4 @@ export class SortedArray<T extends C, C = T> extends AbstractSortedArray<T, C> {
  *
  * @throws {Error} If the SortedArray is corrupted.
  */
-export const checkSortedArray: <T>(self: SortedArray<T>) => void = checkAbstractSortedArray
+export const checkSortedArray: <T extends C, C>(self: SortedArray<T, C>) => void = checkAbstractSortedArray

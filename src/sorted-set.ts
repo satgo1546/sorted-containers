@@ -445,7 +445,7 @@ export class SortedSet<T extends C, C = T> extends AbstractSortedArray<T, C> {
  *
  * @throws {Error} If the SortedSet is corrupted.
  */
-export function checkSortedSet<T>(self: SortedSet<T>) {
+export function checkSortedSet<T extends C, C>(self: SortedSet<T, C>) {
 	checkAbstractSortedArray(self)
 
 	// Check all sublists are sorted.

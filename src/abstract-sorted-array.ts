@@ -40,7 +40,7 @@ export interface SortedArrayConstructorOptions<T> {
  *
  * You should not be using it directly.
  */
-export abstract class AbstractSortedArray<T extends C, C = T> {
+export abstract class AbstractSortedArray<T extends C, C> {
 	static DEFAULT_LOAD_FACTOR = 1000
 	/** @internal */
 	readonly _load: number
@@ -962,7 +962,7 @@ export abstract class AbstractSortedArray<T extends C, C = T> {
  *
  * @throws {Error} If the AbstractSortedArray is corrupted.
  */
-export function checkAbstractSortedArray<T>(self: AbstractSortedArray<T>): void {
+export function checkAbstractSortedArray<T extends C, C>(self: AbstractSortedArray<T, C>): void {
 	try {
 		assert(self._load >= 4)
 		assert(self._maxes.length === self._lists.length)
