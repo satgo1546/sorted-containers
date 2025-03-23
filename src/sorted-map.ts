@@ -1,54 +1,6 @@
-import { assert, defaultComparator, IteratorPrototype } from './common.ts'
+import { assert, IteratorPrototype } from './common.ts'
 import { AbstractSortedArray, checkAbstractSortedArray, type SortedArrayConstructorOptions } from './abstract-sorted-array.ts'
 import { bisectLeft } from './bisect.ts'
-
-/**
- * Map an iterator of key-value objects to an iterator of keys.
- */
-function toKeys<K>(iterator: Iterator<{ key: K }>): IteratorObject<K, undefined, unknown> {
-	return {
-		// @ts-expect-error
-		__proto__: IteratorPrototype,
-		next: () => {
-			const { value, done } = iterator.next()
-			return done
-				? { value: undefined, done: true }
-				: { value: value.key, done: false }
-		},
-	}
-}
-
-/**
- * Map an iterator of key-value objects to an iterator of values.
- */
-function toValues<V>(iterator: Iterator<{ value: V }>): IteratorObject<V, undefined, unknown> {
-	return {
-		// @ts-expect-error
-		__proto__: IteratorPrototype,
-		next: () => {
-			const { value, done } = iterator.next()
-			return done
-				? { value: undefined, done: true }
-				: { value: value.value, done: false }
-		},
-	}
-}
-
-/**
- * Map an iterator of key-value objects to an iterator of key-value pairs.
- */
-function toEntries<K, V>(iterator: Iterator<{ key: K, value: V }>): IteratorObject<[K, V], undefined, unknown> {
-	return {
-		// @ts-expect-error
-		__proto__: IteratorPrototype,
-		next: () => {
-			const { value, done } = iterator.next()
-			return done
-				? { value: undefined, done: true }
-				: { value: [value.key, value.value], done: false }
-		},
-	}
-}
 
 /**
  * SortedMap is a sorted mutable mapping.
@@ -123,7 +75,7 @@ function toEntries<K, V>(iterator: Iterator<{ key: K, value: V }>): IteratorObje
  */
 export class SortedMap<K extends C, V, C = K> extends AbstractSortedArray<K, C> implements Map<K, V> {
 	/** @internal */
-	_values: V[][]
+	_values: V[][] = []
 
 	/**
 	 * Initialize a SortedMap instance, optionally with the given key-value pairs.
@@ -145,7 +97,6 @@ export class SortedMap<K extends C, V, C = K> extends AbstractSortedArray<K, C> 
 	 */
 	constructor(iterable?: Iterable<[K, V]>, options?: SortedArrayConstructorOptions<C>) {
 		super(undefined, options)
-		this._values = []
 		if (iterable) {
 			this.update(iterable)
 		}
@@ -227,8 +178,8 @@ export class SortedMap<K extends C, V, C = K> extends AbstractSortedArray<K, C> 
 
 	_expand(pos: number): void {
 		super._expand(pos)
-		if (this._values[pos].length > this._load << 1) {
-			const sublist = this._values[pos]
+		const sublist = this._values[pos]
+		if (sublist.length > this._load << 1) {
 			const half = sublist.splice(this._load)
 			this._values.splice(pos + 1, 0, half)
 		}
@@ -268,14 +219,6 @@ export class SortedMap<K extends C, V, C = K> extends AbstractSortedArray<K, C> 
 		if (start === 0 && end === this._len) {
 			return this.clear()
 		}
-		// if (this._len <= 8 * (end - start)) {
-		// 	let keys = this.slice(0, start)
-		// 	if (end < this._len) {
-		// 		keys = keys.concat(this.slice(end))
-		// 	}
-		// 	this.clear()
-		// 	return this.update(keys)
-		// }
 
 		for (let index = end - 1; index >= start; index--) {
 			const [pos, idx] = this._pos(index)
