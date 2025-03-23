@@ -20,54 +20,48 @@ import { bisectLeft } from './bisect.ts'
  * The total ordering of keys must not change while they are stored in the SortedMap.
  *
  * Map methods and properties:
-
- * {@link SortedMap#get}
- * {@link SortedMap#has}
- * {@link SortedMap#set}
- * {@link SortedMap#delete}
- * {@link SortedMap#clear}
- * {@link SortedMap#forEach}
- * {@link SortedMap#[Symbol.iterator]}
- * {@link SortedMap#keys}
- * {@link SortedMap#values}
- * {@link SortedMap#entries}
- * {@link SortedMap#size}
- * {@link SortedMap#[Symbol.toStringTag]}
  *
- * Methods for adding items:
+ * - {@link SortedMap#get}
+ * - {@link SortedMap#has}
+ * - {@link SortedMap#set}
+ * - {@link SortedMap#delete}
+ * - {@link SortedMap#clear}
+ * - {@link SortedMap#forEach}
+ * - {@link SortedMap#[Symbol.iterator]}
+ * - {@link SortedMap#keys}
+ * - {@link SortedMap#values}
+ * - {@link SortedMap#entries}
+ * - {@link SortedMap#size}
+ * - {@link SortedMap#[Symbol.toStringTag]}
  *
- * {@link SortedMap#upsert}
- * {@link SortedMap#update}
+ * Additional methods for adding items:
  *
- * Methods for removing items:
+ * - {@link SortedMap#upsert}
+ * - {@link SortedMap#update}
  *
- * {@link SortedMap#clear}
- * {@link SortedMap#pop}
- * {@link SortedMap#popEntry}
+ * Additional methods for removing items:
  *
- * Methods for looking up items:
+ * - {@link SortedMap#popKey}
+ * - {@link SortedMap#popEntry}
  *
- * {@link SortedMap#has}
- * {@link SortedMap#get}
- * {@link SortedMap#at}
+ * Additional methods for looking up items:
  *
- * Methods for views:
- *
- * {@link SortedMap#keys}
- * {@link SortedMap#items}
- * {@link SortedMap#values}
+ * - {@link SortedMap#entryAt}
  *
  * Miscellaneous methods:
  *
- * {@link SortedMap#clone}
+ * - {@link SortedMap#clone}
  *
  * SortedArray methods available (applies to keys):
  *
- * {@link SortedMap#bisectLeft}
- * {@link SortedMap#bisectRight}
- * {@link SortedMap#indexOf}
- * {@link SortedMap#irange}
- * {@link SortedMap#islice}
+ * - {@link SortedMap#at}
+ * - {@link SortedMap#bisectLeft}
+ * - {@link SortedMap#bisectRight}
+ * - {@link SortedMap#deleteAt}
+ * - {@link SortedMap#deleteSlice}
+ * - {@link SortedMap#indexOf}
+ * - {@link SortedMap#irange}
+ * - {@link SortedMap#islice}
  *
  * @typeParam K - The type of keys.
  * @typeParam V - The type of values.
@@ -117,14 +111,17 @@ export class SortedMap<K extends C, V, C = K> extends AbstractSortedArray<K, C> 
 	}
 
 	/**
+	 * Get the value associated with the `key`, returning undefined if `key` is not found.
+	 *
+	 * @param key - The key to look up.
+	 */
+	get(key: C): V | undefined
+	/**
 	 * Get the value associated with the `key`, with `defaultValue` as a fallback.
 	 *
 	 * @param key - The key to look up.
 	 * @param defaultValue - The value to return if no value is associated with the key.
-	 * @returns The value associated with the specified key, or the default value if the key is not found.
-	 * If neither an entry is found nor a default value is provided, undefined is returned.
 	 */
-	get(key: C): V | undefined
 	get<R>(key: C, defaultValue: R): V | R
 	get(key: C, defaultValue?: unknown): unknown {
 		const pos = bisectLeft(this._maxes, key, this._cmp)
@@ -348,20 +345,31 @@ export class SortedMap<K extends C, V, C = K> extends AbstractSortedArray<K, C> 
 	/**
 	 * Remove and return value for the item identified by `key`.
 	 *
-	 * If the `key` is not found then return `defaultValue` if given.
-	 * If `defaultValue` is not given then return undefined.
+	 * If the `key` is not found then return undefined.
 	 *
 	 * @example
 	 * const sd = new SortedMap([['a', 1], ['b', 2], ['c', 3]]);
 	 * sd.popKey('c') // 3
-	 * sd.popKey('z', 26) // 26
 	 * sd.popKey('y') // undefined
 	 *
 	 * @param key - Key for item.
-	 * @param defaultValue - Default value if key not found (optional).
-	 * @returns Value for item.
+	 * @returns Value for item or undefined.
 	 */
 	popKey(key: C): V | undefined
+	/**
+	 * Remove and return value for the item identified by `key`.
+	 *
+	 * If the `key` is not found then return `defaultValue`.
+	 *
+	 * @example
+	 * const sd = new SortedMap([['a', 1], ['b', 2], ['c', 3]]);
+	 * sd.popKey('c', 26) // 3
+	 * sd.popKey('z', 26) // 26
+	 *
+	 * @param key - Key for item.
+	 * @param defaultValue - Default value if key not found.
+	 * @returns Value for item.
+	 */
 	popKey<R>(key: C, defaultValue: R): V | R
 	popKey(key: C, defaultValue?: unknown): unknown {
 		const val = this.get(key, defaultValue)
@@ -445,7 +453,7 @@ export class SortedMap<K extends C, V, C = K> extends AbstractSortedArray<K, C> 
 	 * Overwrites existing items.
 	 *
 	 * `other` argument may be a Map, a SortedMap, an iterable of pairs.
-	 * See {@link SortedMap#constructor} for details.
+	 * See {@link constructor} for details.
 	 *
 	 * @param other - Iterable of pairs.
 	 */
@@ -455,6 +463,9 @@ export class SortedMap<K extends C, V, C = K> extends AbstractSortedArray<K, C> 
 		}
 	}
 
+	/**
+	 * @returns Always `'SortedMap'`.
+	 */
 	get [Symbol.toStringTag](): string {
 		return 'SortedMap'
 	}

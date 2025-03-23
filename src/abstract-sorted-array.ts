@@ -41,6 +41,10 @@ export interface SortedArrayConstructorOptions<T> {
  * You should not be using it directly.
  */
 export abstract class AbstractSortedArray<T extends C, C> {
+	/**
+	 * The default load factor.
+	 * Override it with option `loadFactor` at construction time.
+	 */
 	static DEFAULT_LOAD_FACTOR = 1000
 	/** @internal */
 	readonly _load: number

@@ -2,7 +2,7 @@
 
 Work in progress.
 
-Status: SortedArray and SortedSet works, published on npm.
+Status: All three types of containers work. Published on npm. Polish pending.
 
 ---
 
