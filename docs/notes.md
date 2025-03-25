@@ -326,9 +326,51 @@ Therefore, a SortedArray in JavaScript is not compatible with an ordinary Array.
 
 ### SortedMap
 
-Unlike SortedArray, SortedMap can be used in place of Map.
+Unlike SortedArray, SortedMap can mostly be used in place of Map,
+though the types are subtly different enough for TypeScript to consider them incompatible.
 It has the same API, but the semantics are different, mostly regarding the equality of keys,
 as is discussed in the section of comparator.
+
+#### Type incompatibility
+
+The standard JavaScript objects are constantly augmented by the language committee.
+TypeScript faithfully reflects them in system declaration files.
+
+For example, the `[Symbol.toStringTag]` property is added to `Map.prototype` later than `[Symbol.iterator]`.
+TypeScript is able to ship these two definitions in separate files along with the main Map interface.
+
+```ts
+// lib.es2015.iterable.d.ts
+interface Map<K, V> {
+    /** Returns an iterable of entries in the map. */
+    [Symbol.iterator](): MapIterator<[K, V]>;
+```
+
+```ts
+// lib.es2015.symbol.wellknown.d.ts
+interface Map<K, V> {
+    readonly [Symbol.toStringTag]: string;
+}
+```
+
+While `[Symbol.iterator]` is helpful, `[Symbol.toStringTag]` is of little use.
+It does not seem justified to provide a string few will ever see just to implement an interface.
+SortedMap does not try to provide every single property the built-in Map has.
+
+In the meantime, proposals always want to add more methods to Map.
+Constant work is required to catch up with the forever-changing types.
+
+[`getOrInsert`](https://tc39.es/proposal-upsert/) is an example.
+If I use the method name before the proposal is accepted,
+but the types turn out to be different in TypeScript,
+it will be impossible to recover type compatibility without making a breaking change to the library.
+It is thus safer to say that the types are intentionally incompatible,
+so that future specification updates will not break your TypeScript compilations.
+
+Anyway, it is doubtful whether these difference in types will make any difference.
+Unlike in Python, where dict is *the* mapping type,
+functions accepting Map objects are extraordinarily rare in wild JavaScript,
+as for string keys, plain old objects are usually preferred.
 
 #### Identity of duplicate keys
 

@@ -32,7 +32,6 @@ import { bisectLeft } from './bisect.ts'
  * - {@link SortedMap#values}
  * - {@link SortedMap#entries}
  * - {@link SortedMap#size}
- * - {@link SortedMap#[Symbol.toStringTag]}
  *
  * Additional methods for adding items:
  *
@@ -67,7 +66,7 @@ import { bisectLeft } from './bisect.ts'
  * @typeParam V - The type of values.
  * @typeParam C - Part of the key that the comparator function sees.
  */
-export class SortedMap<K extends C, V, C = K> extends AbstractSortedArray<K, C> implements Map<K, V> {
+export class SortedMap<K extends C, V, C = K> extends AbstractSortedArray<K, C> {
 	/** @internal */
 	_values: V[][] = []
 
@@ -461,13 +460,6 @@ export class SortedMap<K extends C, V, C = K> extends AbstractSortedArray<K, C> 
 		for (const [key, value] of Array.from(other)) {
 			this.set(key, value)
 		}
-	}
-
-	/**
-	 * @returns Always `'SortedMap'`.
-	 */
-	get [Symbol.toStringTag](): string {
-		return 'SortedMap'
 	}
 }
 
