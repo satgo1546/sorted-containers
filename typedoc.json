@@ -10,6 +10,7 @@
 		"docs/comparator.md",
 		"docs/performance.md",
 		"docs/notes.md",
+		"docs/development.md",
 	],
 	"highlightLanguages": [
 		"bash",

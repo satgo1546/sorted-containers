@@ -292,6 +292,29 @@ Et voilà!
 The TypeScript compiler is quite happy with this type despite its absurd look.
 It is able to infer the other type parameter given either of them.
 
+## The association
+
+SortedDict in Python is implemented as a dict with an internal SortedList keeping the order of keys.
+Most mapping functionalities are inherited from dict.
+
+This is not directly possible in JavaScript because of the comparator.
+As is discussed, key look-up is done through bisection.
+
+How should values be retrieved given the keys?
+A few solutions exist:
+
+1. Keep a SortedSet of keys and insist on using a regular Map from these keys to values.
+2. Keep a SortedSet of `{key, value}` objects or `[key, value]` pairs which are compared by key.
+3. Keep a SortedSet of keys and a collection of values structurally parallel to the keys.
+
+The first option has acceptable performance and even outperforms the third in some cases, but iterating is slow.
+It also has the additional requirement that ±0 must be treated the same by the comparator,
+though it should be a rare need to treat ±0 differently.
+
+The second option is simplistic, but it makes every key retrieval and  comparison an indirection, which degrades performance vastly.
+
+I have settled on the last solution because it provides the best overall performance.
+
 ## The interface
 
 ### SortedList
@@ -305,7 +328,7 @@ Therefore, a SortedArray in JavaScript is not compatible with an ordinary Array.
 
 Unlike SortedArray, SortedMap can be used in place of Map.
 It has the same API, but the semantics are different, mostly regarding the equality of keys,
-as is discussed in the previous section.
+as is discussed in the section of comparator.
 
 #### Identity of duplicate keys
 
@@ -490,6 +513,58 @@ new Set(['a']).union(['b'])
 As for SortedSet, a produced set must inherit its parameters from one of the operands consistently since comparator functions are not universal.
 It is then only natural for SortedSet methods to take an iterable argument and keep the parameters of `this`.
 Because of this, SortedSet cannot be compatible with the native Set.
+
+## The delegate
+
+Composition/delegation is preferred to inheritance/subclassing in many cases.
+In the case of sorted containers, they share functionalities, but are not the same type of objects,
+so composition is preferred.
+
+SortedSet and SortedDict in Python have an internal slot keeping a SortedList.
+Select methods are exposed through delegation, which is easily done in Python as follows:
+
+```python
+# Expose some set methods publicly.
+_set = self._set
+self.isdisjoint = _set.isdisjoint
+self.issubset = _set.issubset
+self.issuperset = _set.issuperset
+
+# Expose some sorted list methods publicly.
+_list = self._list
+self.bisect_left = _list.bisect_left
+self.bisect = _list.bisect
+self.bisect_right = _list.bisect_right
+self.index = _list.index
+self.irange = _list.irange
+self.islice = _list.islice
+self._reset = _list._reset
+```
+
+`_list.bisect_left` is a function bound to `_list`.
+
+This even copies docstrings along, because they are first-class attributes on functions.
+Documentation can be correctly generated, because documentation tools for Python actually runs the code to extract docs.
+
+In Ruby, a dedicated module Forwardable can be utilized.
+
+In JavaScript, the canonical way to share methods on objects is with the prototype chain.
+However, manipulating prototypes confuses all tooling (docs and types) because it is so dynamic.
+To ensure tools still recognize the class structure,
+the only reliable way to delegate methods is to repeat the signatures and docs,
+which is annoying if there are many parameters.
+
+```js
+class SortedSet<T> {
+  _list: SortedArray<T>
+
+  irange(minimum?: T, maximum?: T, includeMinimum = true, includeMaximum = true, reverse = false): IteratorObject<T, undefined, unknown> {
+    return this._list.irange(minimum, maximum, includeMinimum, includeMaximum, reverse)
+  }
+```
+
+In the end, I give up and decide to create a base class AbstractSortedArray that is not exposed as public API.
+The private fields are not marked as private but as `@internal` as a result.
 
 ## The iterator
 

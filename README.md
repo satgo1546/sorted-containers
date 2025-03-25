@@ -42,10 +42,11 @@ Complete documentation for sorted-containers is available at <https://satgo1546.
 
 ## Resources
 
-- [sorted-containers Documentation](https://satgo1546.github.io/sorted-containers/)
+- [documentation](https://satgo1546.github.io/sorted-containers/)
 - [sorted-containers on npm](https://www.npmjs.com/package/sorted-containers)
 - [sorted-containers on GitHub](https://github.com/satgo1546/sorted-containers)
-- [sorted-containers issue tracker](https://github.com/satgo1546/sorted-containers/issues)
+- [issue tracker](https://github.com/satgo1546/sorted-containers/issues)
+- [release notes](https://github.com/satgo1546/sorted-containers/releases)
 
 ### In Other Languages
 

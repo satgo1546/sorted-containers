@@ -7,7 +7,7 @@ import { bisectLeft } from './bisect.ts'
  *
  * SortedMap keys are maintained in sorted order.
  * The design of SortedMap is simple:
- * SortedMap maintains a SortedArray of key-value pair objects.
+ * SortedMap maintains a sorted array of keys and an array of values in parallel.
  * It does not use the native Map type at all.
  *
  * SortedMap is compatible with Map.
