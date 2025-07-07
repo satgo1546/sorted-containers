@@ -45,6 +45,7 @@
 	"devDependencies": {
 		"@types/bintrees": "^1.0.6",
 		"@types/functional-red-black-tree": "^1.0.6",
+		"@types/node": "^24.0.10",
 		"@types/seedrandom": "^3.0.8",
 		"@vitest/coverage-v8": "^3.2.4",
 		"avl": "^1.6.0",
