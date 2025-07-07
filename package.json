@@ -9,7 +9,7 @@
 		"dist"
 	],
 	"scripts": {
-		"prepack": "tsup",
+		"prepack": "tsdown",
 		"test": "vitest run"
 	},
 	"keywords": [
@@ -59,7 +59,7 @@
 		"sorted-btree": "^1.8.1",
 		"splaytree": "^3.1.2",
 		"tinybench": "^4.0.1",
-		"tsup": "^8.5.0",
+		"tsdown": "^0.12.9",
 		"typedoc": "^0.28.5",
 		"vite": "^7.0.0",
 		"vitest": "^3.2.4"
