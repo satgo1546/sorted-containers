@@ -4,11 +4,11 @@
 	"description": "Ordered collections — SortedArray, SortedMap, and SortedSet",
 	"main": "dist/index.js",
 	"module": "dist/index.mjs",
-	"types": "dist/index.d.ts",
+	"types": "dist/index.d.mts",
 	"typesVersions": {
 		"<5.6": {
-			"dist/index.d.ts": [
-				"dist/index.ts4.5.d.ts"
+			"dist/index.d.mts": [
+				"dist/index.ts4.5.d.mts"
 			]
 		}
 	},

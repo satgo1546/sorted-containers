@@ -11,7 +11,8 @@ export default defineConfig({
 		}
 	},
 	onSuccess() {
-		writeFileSync('dist/index.ts4.5.d.ts', `// polyfill types for TypeScript < 5.6
+		for (const extension of ['cts', 'mts']) {
+			writeFileSync('dist/index.ts4.5.' + extension, `// polyfill types for TypeScript < 5.6
 interface IteratorObject<T, TReturn = unknown, TNext = unknown> extends Iterator<T, TReturn, TNext> {
 	[Symbol.iterator](): IteratorObject<T, TReturn, TNext>
 }
@@ -28,6 +29,7 @@ interface MapIterator<T> extends IteratorObject<T, any, unknown> {
 	[Symbol.iterator](): MapIterator<T>
 }
 // polyfill end
-` + readFileSync('dist/index.d.ts'))
+` + readFileSync('dist/index.d.' + extension))
+		}
 	},
 })
