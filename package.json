@@ -52,7 +52,7 @@
 	"devDependencies": {
 		"@types/bintrees": "^1.0.6",
 		"@types/functional-red-black-tree": "^1.0.6",
-		"@types/node": "^25.5.0",
+		"@types/node": "^24.12.0",
 		"@types/seedrandom": "^3.0.8",
 		"@vitest/coverage-v8": "^4.1.0",
 		"avl": "^2.0.0",
