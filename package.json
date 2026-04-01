@@ -54,7 +54,7 @@
 		"@types/functional-red-black-tree": "^1.0.6",
 		"@types/node": "^24.12.0",
 		"@types/seedrandom": "^3.0.8",
-		"@vitest/coverage-v8": "^4.1.0",
+		"@vitest/coverage-v8": "^4.1.2",
 		"avl": "^2.0.0",
 		"bintrees": "^1.0.2",
 		"collections": "^5.1.13",
@@ -66,10 +66,10 @@
 		"sorted-btree": "^2.1.0",
 		"splaytree": "^3.2.3",
 		"tinybench": "^6.0.0",
-		"tsdown": "^0.21.4",
-		"typedoc": "^0.28.17",
-		"vite": "^8.0.0",
-		"vitest": "^4.1.0"
+		"tsdown": "^0.21.7",
+		"typedoc": "^0.28.18",
+		"vite": "^8.0.3",
+		"vitest": "^4.1.2"
 	},
 	"packageManager": "pnpm@10.30.1",
 	"pnpm": {
